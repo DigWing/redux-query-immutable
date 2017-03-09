@@ -247,20 +247,3 @@ The result of the promise returned by `mutateAsync` will be the following object
 ### `requestAsync`
 
 Similarly to how mutations are triggered by dispatching `mutateAsync` actions, you can trigger requests by dispatching `requestAsync` actions with a request query config.
-
-## Example
-
-A fork of the `redux` [Async](https://github.com/reactjs/redux/tree/master/examples/async) example is included. To run, first build the package:
-
-```sh
-$ npm install
-$ npm run build
-```
-
-Then you can run the example:
-
-```sh
-$ cd examples/async
-$ npm install
-$ npm run start
-```
