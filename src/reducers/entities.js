@@ -1,53 +1,33 @@
-import omit from 'lodash.omit';
+import * as actionTypes from '../constants/action-types';
+import { fromJS } from 'immutable';
 
-import {
-    MUTATE_FAILURE,
-    MUTATE_START,
-    MUTATE_SUCCESS,
-    REQUEST_SUCCESS,
-    RESET,
-    REMOVE_ENTITIES,
-    REMOVE_ENTITY,
-} from '../constants/action-types';
-
-const initialState = {};
+const initialState = fromJS({});
 
 const withoutPath = (state, path) => {
     const [key, ...restPath] = path;
 
     if (restPath.length) {
-        return {
-            ...state,
-            [key]: withoutPath(state[key], restPath),
-        };
+        const newMap = fromJS({ [key]: withoutPath(state.get(key), restPath) });
+        return state.merge(newMap);
     } else {
-        return omit(state, key);
+        return state.delete(key);
     }
 };
 
 const entities = (state = initialState, action) => {
-    if (action.type === RESET) {
+    if (action.type === actionTypes.RESET) {
         return 'entities' in action ? action.entities : initialState;
-    } else if (action.type === MUTATE_START && action.optimisticEntities) {
-        return {
-            ...state,
-            ...action.optimisticEntities,
-        };
-    } else if (action.type === MUTATE_FAILURE && action.originalEntities) {
-        return {
-            ...state,
-            ...action.originalEntities,
-        };
-    } else if (action.type === REQUEST_SUCCESS || action.type === MUTATE_SUCCESS) {
-        return {
-            ...state,
-            ...action.entities,
-        };
-    } else if (action.type === REMOVE_ENTITIES) {
+    } else if (action.type === actionTypes.MUTATE_START && action.optimisticEntities) {
+        return state.merge(action.optimisticEntities);
+    } else if (action.type === actionTypes.MUTATE_FAILURE && action.originalEntities) {
+        return state.merge(action.originalEntities);
+    } else if (action.type === actionTypes.REQUEST_SUCCESS || action.type === actionTypes.MUTATE_SUCCESS) {
+        return state.merge(action.entities);
+    } else if (action.type === actionTypes.REMOVE_ENTITIES) {
         return action.paths.reduce((accum, path) => {
             return withoutPath(accum, path);
         }, state);
-    } else if (action.type === REMOVE_ENTITY) {
+    } else if (action.type === actionTypes.REMOVE_ENTITY) {
         return withoutPath(state, action.path);
     } else {
         return state;

@@ -80,8 +80,8 @@ const connectRequest = (mapPropsToConfigs, options = {}) => (WrappedComponent) =
             const pendingKeys = Object.keys(this._pendingRequests);
 
             ensureArray(cancelKeys)
-            .filter((key) => includes(pendingKeys, key))
-            .forEach((queryKey) => dispatch(cancelQuery(queryKey)));
+                .filter((key) => includes(pendingKeys, key))
+                .forEach((queryKey) => dispatch(cancelQuery(queryKey)));
         }
 
         requestAsync(configs, force = false, retry = false) {

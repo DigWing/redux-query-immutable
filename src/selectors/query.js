@@ -1,8 +1,6 @@
-import get from 'lodash.get';
-
 import { reconcileQueryKey } from '../lib/query-key';
 
-export const isFinished = (urlOrConfig, body) => (queriesState) => {
+const getQueryState = (urlOrConfig, body, queriesState, queryStateKey) => {
     let queryKey;
 
     if (typeof urlOrConfig === 'string') {
@@ -11,53 +9,25 @@ export const isFinished = (urlOrConfig, body) => (queriesState) => {
         queryKey = reconcileQueryKey(urlOrConfig);
     }
 
-    return get(queriesState, [queryKey, 'isFinished']);
+    return queriesState.getIn([queryKey, queryStateKey]);
+};
+
+export const isFinished = (urlOrConfig, body) => (queriesState) => {
+    return getQueryState(urlOrConfig, body, queriesState, 'isFinished');
 };
 
 export const isPending = (urlOrConfig, body) => (queriesState) => {
-    let queryKey;
-
-    if (typeof urlOrConfig === 'string') {
-        queryKey = reconcileQueryKey({ url: urlOrConfig, body });
-    } else {
-        queryKey = reconcileQueryKey(urlOrConfig);
-    }
-
-    return get(queriesState, [queryKey, 'isPending']);
+    return getQueryState(urlOrConfig, body, queriesState, 'isPending');
 };
 
 export const status = (urlOrConfig, body) => (queriesState) => {
-    let queryKey;
-
-    if (typeof urlOrConfig === 'string') {
-        queryKey = reconcileQueryKey({ url: urlOrConfig, body });
-    } else {
-        queryKey = reconcileQueryKey(urlOrConfig);
-    }
-
-    return get(queriesState, [queryKey, 'status']);
+    return getQueryState(urlOrConfig, body, queriesState, 'status');
 };
 
 export const lastUpdated = (urlOrConfig, body) => (queriesState) => {
-    let queryKey;
-
-    if (typeof urlOrConfig === 'string') {
-        queryKey = reconcileQueryKey({ url: urlOrConfig, body });
-    } else {
-        queryKey = reconcileQueryKey(urlOrConfig);
-    }
-
-    return get(queriesState, [queryKey, 'lastUpdated']);
+    return getQueryState(urlOrConfig, body, queriesState, 'lastUpdated');
 };
 
 export const queryCount = (urlOrConfig, body) => (queriesState) => {
-    let queryKey;
-
-    if (typeof urlOrConfig === 'string') {
-        queryKey = reconcileQueryKey({ url: urlOrConfig, body });
-    } else {
-        queryKey = reconcileQueryKey(urlOrConfig);
-    }
-
-    return get(queriesState, [queryKey, 'queryCount']);
+    return getQueryState(urlOrConfig, body, queriesState, 'queryCount');
 };

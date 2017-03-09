@@ -1,60 +1,52 @@
 import * as actionTypes from '../constants/action-types';
+import { Map, fromJS } from 'immutable';
 
-const initialState = {};
+const initialState = Map();
 
 const queries = (state = initialState, action) => {
     switch (action.type) {
         case actionTypes.RESET: {
-            return {};
+            return initialState;
         }
         case actionTypes.MUTATE_START:
         case actionTypes.REQUEST_START: {
-            const { queryKey } = action;
-
-            return {
-                ...state,
-                [queryKey]: {
+            const newMap = {
+                [action.queryKey]: {
                     url: action.url,
                     isFinished: false,
                     isPending: true,
                     request: action.request,
                     isMutation: action.type === actionTypes.MUTATE_START,
-                    queryCount: state[queryKey] ? state[queryKey].queryCount + 1 : 1,
+                    queryCount: state.get(action.queryKey) ? state.getIn([action.queryKey, 'queryCount']) + 1 : 1,
                 },
             };
+
+            return state.merge(fromJS(newMap));
         }
         case actionTypes.REQUEST_SUCCESS:
         case actionTypes.MUTATE_FAILURE:
         case actionTypes.MUTATE_SUCCESS:
         case actionTypes.REQUEST_FAILURE: {
-            const { queryKey } = action;
-
-            return {
-                ...state,
-                [queryKey]: {
-                    ...state[queryKey],
-                    isFinished: true,
-                    isPending: false,
-                    lastUpdated: action.time,
-                    status: action.status,
-                },
+            const newQueryKeyState = {
+                isFinished: true,
+                isPending: false,
+                lastUpdated: action.time,
+                status: action.status,
             };
+
+            return state.mergeIn([action.queryKey], fromJS(newQueryKeyState));
         }
         case actionTypes.CANCEL_QUERY: {
-            const { queryKey } = action;
-
-            if (state[queryKey].isPending) {
+            if (state.getIn([action.queryKey, 'isPending'])) {
                 // Make sure request is actually pending
 
-                return {
-                    ...state,
-                    [queryKey]: {
-                        ...state[queryKey],
-                        isFinished: true,
-                        isPending: false,
-                        status: 0,
-                    },
+                const newQueryKeyState = {
+                    isFinished: true,
+                    isPending: false,
+                    status: 0,
                 };
+
+                return state.mergeIn([action.queryKey], fromJS(newQueryKeyState));
             }
 
             return state;

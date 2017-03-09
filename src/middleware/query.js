@@ -1,9 +1,7 @@
 import Backoff from 'backo';
 import invariant from 'invariant';
-import get from 'lodash.get';
 import identity from 'lodash.identity';
 import includes from 'lodash.includes';
-import pickBy from 'lodash.pickby';
 import superagent from 'superagent';
 
 import {
@@ -18,6 +16,7 @@ import * as actionTypes from '../constants/action-types';
 import * as httpMethods from '../constants/http-methods';
 import * as statusCodes from '../constants/status-codes';
 import { reconcileQueryKey } from '../lib/query-key';
+import { Map, fromJS } from 'immutable';
 
 const createRequest = (url, method) => {
     let request;
@@ -41,26 +40,20 @@ const createRequest = (url, method) => {
     return request;
 };
 
-const updateEntities = (update, entities, transformed) => {
+const updateEntities = (update, entities = Map(), transformed = Map()) => {
     // If update, not supplied, then no change to entities should be made
-
     return Object.keys(update || {}).reduce((accum, key) => {
-        accum[key] = update[key]((entities || {})[key], (transformed || {})[key]);
-
-        return accum;
-    }, {});
+        return accum.set(key, update[key](entities.get(key), transformed.get(key)));
+    }, new Map());
 };
 
-const optimisticUpdateEntities = (optimisticUpdate, entities) => {
+const optimisticUpdateEntities = (optimisticUpdate, entities = Map()) => {
     return Object.keys(optimisticUpdate).reduce((accum, key) => {
         if (optimisticUpdate[key]) {
-            accum[key] = optimisticUpdate[key](entities[key]);
-        } else {
-            accum[key] = entities[key];
+            return accum.set(key, optimisticUpdate[key](entities.get(key)));
         }
-
-        return accum;
-    }, {});
+        return accum.set(key, entities.get(key));
+    }, new Map());
 };
 
 const defaultConfig = {
@@ -79,7 +72,7 @@ const defaultConfig = {
 };
 
 const getPendingQueries = (queries) => {
-    return pickBy(queries, (query) => query.isPending);
+    return queries.filter((query) => query.get('isPending'));
 };
 
 const queryMiddleware = (queriesSelector, entitiesSelector, config = defaultConfig) => {
@@ -108,12 +101,12 @@ const queryMiddleware = (queriesSelector, entitiesSelector, config = defaultConf
                 const state = getState();
                 const queries = queriesSelector(state);
 
-                const queriesState = queries[queryKey];
-                const isPending = get(queriesState, ['isPending']);
-                const status = get(queriesState, ['status']);
+                const queriesState = queries.get(queryKey, new Map());
+                const isPending = queriesState.get(['isPending']);
+                const status = queriesState.get(['status']);
                 const hasSucceeded = status >= 200 && status < 300;
 
-                if (force || !queriesState || (retry && !isPending && !hasSucceeded)) {
+                if (force || queriesState.isEmpty() || (retry && !isPending && !hasSucceeded)) {
                     returnValue = new Promise((resolve) => {
                         const start = new Date();
                         const { method = httpMethods.GET } = options;
@@ -140,42 +133,39 @@ const queryMiddleware = (queriesSelector, entitiesSelector, config = defaultConf
 
                         const attemptRequest = () => {
                             dispatch(requestStart(url, body, request, meta, queryKey));
-
                             attempts += 1;
-
                             request.end((err, response) => {
                                 const resOk = !!(response && response.ok);
                                 const resStatus = (response && response.status) || 0;
                                 const resBody = (response && response.body) || undefined;
                                 const resText = (response && response.text) || undefined;
 
-                                if (
-                                    includes(config.retryableStatusCodes, resStatus) &&
-                                    attempts < config.backoff.maxAttempts
-                                ) {
-                                    // TODO take into account Retry-After header if 503
-                                    setTimeout(attemptRequest, backoff.duration());
-                                    return;
-                                }
-
                                 let transformed;
                                 let newEntities;
 
                                 if (err || !resOk) {
-                                    dispatch(
-                                        requestFailure(
-                                            url,
-                                            body,
-                                            resStatus,
-                                            resBody,
-                                            meta,
-                                            queryKey
-                                        )
-                                    );
+                                    if (
+                                        includes(config.retryableStatusCodes, resStatus) &&
+                                        attempts < config.backoff.maxAttempts
+                                    ) {
+                                        // TODO take into account Retry-After header if 503
+                                        setTimeout(attemptRequest, backoff.duration());
+                                    } else {
+                                        dispatch(
+                                            requestFailure(
+                                                url,
+                                                body,
+                                                resStatus,
+                                                resBody,
+                                                meta,
+                                                queryKey
+                                            )
+                                        );
+                                    }
                                 } else {
                                     const callbackState = getState();
                                     const entities = entitiesSelector(callbackState);
-                                    transformed = transform(resBody, resText);
+                                    transformed = fromJS(transform(resBody, resText));
                                     newEntities = updateEntities(update, entities, transformed);
                                     dispatch(requestSuccess(url, body, resStatus, newEntities, meta, queryKey));
                                 }
@@ -232,7 +222,6 @@ const queryMiddleware = (queriesSelector, entitiesSelector, config = defaultConf
                     if (options.credentials === 'include') {
                         request.withCredentials();
                     }
-
                     // Note: only the entities that are included in `optimisticUpdate` will be passed along in the
                     // `mutateStart` action as `optimisticEntities`
                     dispatch(mutateStart(url, body, request, optimisticEntities, queryKey));
@@ -249,7 +238,7 @@ const queryMiddleware = (queriesSelector, entitiesSelector, config = defaultConf
                         if (err || !resOk) {
                             dispatch(mutateFailure(url, body, resStatus, entities, queryKey));
                         } else {
-                            transformed = transform(resBody, resText);
+                            transformed = fromJS(transform(resBody, resText));
                             newEntities = updateEntities(update, entities, transformed);
                             dispatch(mutateSuccess(url, body, resStatus, newEntities, queryKey));
                         }
@@ -277,8 +266,8 @@ const queryMiddleware = (queriesSelector, entitiesSelector, config = defaultConf
                 const queries = queriesSelector(state);
                 const pendingQueries = getPendingQueries(queries);
 
-                if (queryKey in pendingQueries) {
-                    pendingQueries[queryKey].request.abort();
+                if (pendingQueries.has(queryKey)) {
+                    pendingQueries.getIn([queryKey, 'request', 'abort'])();
                     returnValue = next(action);
                 } else {
                     console.warn('Trying to cancel a request that is not in flight: ', queryKey);
@@ -292,12 +281,7 @@ const queryMiddleware = (queriesSelector, entitiesSelector, config = defaultConf
                 const queries = queriesSelector(state);
                 const pendingQueries = getPendingQueries(queries);
 
-                for (const queryKey in pendingQueries) {
-                    if (pendingQueries.hasOwnProperty(queryKey)) {
-                        pendingQueries[queryKey].request.abort();
-                    }
-                }
-
+                pendingQueries.forEach((query) => query.getIn(['request', 'abort'])());
                 returnValue = next(action);
 
                 break;

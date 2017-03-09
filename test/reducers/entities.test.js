@@ -3,92 +3,99 @@ import { assert } from 'chai';
 import * as actionTypes from '../../src/constants/action-types';
 import entities from '../../src/reducers/entities';
 
+import { fromJS } from 'immutable';
+
+const assertEqual = (newEntities, expectedEntities) => {
+    assert.equal(newEntities.get('message'), expectedEntities.get('message'));
+    assert.equal(newEntities.get('user'), expectedEntities.get('user'));
+};
+
 describe('entities reducer', () => {
     it('should handle REQUEST_SUCCESS', () => {
         const action = {
             type: actionTypes.REQUEST_SUCCESS,
-            entities: {
+            entities: fromJS({
                 message: 'hello, world!',
-            },
+            }),
         };
-        const prevState = {
+        const prevState = fromJS({
             user: 'ryanashcraft',
-        };
+        });
         const newEntities = entities(prevState, action);
-        const expectedEntities = {
+        const expectedEntities = fromJS({
             message: 'hello, world!',
             user: 'ryanashcraft',
-        };
-        assert.deepEqual(newEntities, expectedEntities);
+        });
+
+        assertEqual(newEntities, expectedEntities);
     });
 
     it('should handle MUTATE_SUCCESS', () => {
         const action = {
             type: actionTypes.MUTATE_SUCCESS,
-            entities: {
+            entities: fromJS({
                 message: 'hello, world!',
-            },
+            }),
         };
-        const prevState = {
+        const prevState = fromJS({
             user: 'ryanashcraft',
-        };
+        });
         const newEntities = entities(prevState, action);
-        const expectedEntities = {
+        const expectedEntities = fromJS({
             message: 'hello, world!',
             user: 'ryanashcraft',
-        };
-        assert.deepEqual(newEntities, expectedEntities);
+        });
+        assertEqual(newEntities, expectedEntities);
     });
 
     it('should handle MUTATE_START and optimistic entities', () => {
         const action = {
             type: actionTypes.MUTATE_START,
-            optimisticEntities: {
+            optimisticEntities: fromJS({
                 message: 'hello, optimistic world!',
-            },
+            }),
         };
-        const prevState = {
+        const prevState = fromJS({
             message: 'hello, world!',
             user: 'ryanashcraft',
-        };
+        });
         const newEntities = entities(prevState, action);
-        const expectedEntities = {
+        const expectedEntities = fromJS({
             message: 'hello, optimistic world!',
             user: 'ryanashcraft',
-        };
-        assert.deepEqual(newEntities, expectedEntities);
+        });
+        assertEqual(newEntities, expectedEntities);
     });
 
     it('should handle MUTATE_FAILURE and original entities', () => {
         const action = {
             type: actionTypes.MUTATE_FAILURE,
-            originalEntities: {
+            originalEntities: fromJS({
                 message: 'hello, world!',
-            },
+            }),
         };
-        const prevState = {
+        const prevState = fromJS({
             message: 'hello, optimistic world!',
             user: 'ryanashcraft',
-        };
+        });
         const newEntities = entities(prevState, action);
-        const expectedEntities = {
+        const expectedEntities = fromJS({
             message: 'hello, world!',
             user: 'ryanashcraft',
-        };
-        assert.deepEqual(newEntities, expectedEntities);
+        });
+        assertEqual(newEntities, expectedEntities);
     });
 
     it('should handle RESET', () => {
         const action = {
             type: actionTypes.RESET,
         };
-        const prevState = {
+        const prevState = fromJS({
             message: 'hello, world!',
             user: 'ryanashcraft',
-        };
+        });
         const newEntities = entities(prevState, action);
-        const expectedEntities = {};
-        assert.deepEqual(newEntities, expectedEntities);
+        assert.isTrue(newEntities.isEmpty());
     });
 
     it('should handle REMOVE_ENTITY', () => {
@@ -96,20 +103,15 @@ describe('entities reducer', () => {
             type: actionTypes.REMOVE_ENTITY,
             path: ['some', 'thing', 'gone'],
         };
-        const prevState = {
+        const prevState = fromJS({
             some: {
                 thing: {
                     gone: {},
                 },
             },
-        };
+        });
         const newEntities = entities(prevState, action);
-        const expectedEntities = {
-            some: {
-                thing: {},
-            },
-        };
-        assert.deepEqual(newEntities, expectedEntities);
+        assert.isTrue(newEntities.getIn(['some', 'thing']).isEmpty());
     });
 
     it('should handle REMOVE_ENTITIES', () => {
@@ -120,7 +122,7 @@ describe('entities reducer', () => {
                 ['something', 'else', 'gone'],
             ],
         };
-        const prevState = {
+        const prevState = fromJS({
             some: {
                 thing: {
                     gone: {},
@@ -131,16 +133,11 @@ describe('entities reducer', () => {
                     gone: {},
                 },
             },
-        };
+        });
         const newEntities = entities(prevState, action);
-        const expectedEntities = {
-            some: {
-                thing: {},
-            },
-            something: {
-                else: {},
-            },
-        };
-        assert.deepEqual(newEntities, expectedEntities);
+        assert.isNotTrue(prevState.getIn(['some', 'thing']).isEmpty());
+        assert.isNotTrue(prevState.getIn(['something', 'else']).isEmpty());
+        assert.isTrue(newEntities.getIn(['some', 'thing']).isEmpty());
+        assert.isTrue(newEntities.getIn(['something', 'else']).isEmpty());
     });
 });
