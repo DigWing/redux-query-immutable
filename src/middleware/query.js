@@ -100,7 +100,6 @@ const queryMiddleware = (queriesSelector, entitiesSelector, config = defaultConf
 
                 const state = getState();
                 const queries = queriesSelector(state);
-                
                 const queriesState = queries.get(queryKey, new Map());
                 const isPending = queriesState.get('isPending');
                 const status = queriesState.get('status');
