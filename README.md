@@ -31,8 +31,9 @@ Include the `queryMiddleware` in your store's `applyMiddleware` call. `queryMidd
 For example:
 
 ```javascript
-import { applyMiddleware, createStore, combineReducers } from 'redux';
-import { entitiesReducer, queriesReducer, queryMiddleware } from 'redux-query';
+import { applyMiddleware, createStore } from 'redux';
+import { combineReducers } from 'redux-immutable'
+import { entitiesReducer, queriesReducer, queryMiddleware } from 'redux-query-immutable';
 import createLogger from 'redux-logger';
 
 export const getQueries = (state) => state.queries;
@@ -58,7 +59,7 @@ All dependencies are listed in [`package.json`](./package.json). Redux and React
 
 ### Requests and mutations
 
-There are two types of queries with `redux-query`: "requests" and "mutations". Requests are for reading values from HTTP endpoints. Mutations are for HTTP endpoints that change network state – the "C", "U", and "D" in "CRUD".
+There are two types of queries with `redux-query-immutable`: "requests" and "mutations". Requests are for reading values from HTTP endpoints. Mutations are for HTTP endpoints that change network state – the "C", "U", and "D" in "CRUD".
 
 Requests can be triggered from the `connectRequest` higher-order component or a `requestAsync` action. Mutations are triggered by dispatching a `mutateAsync` action.
 
@@ -126,8 +127,8 @@ The `prevValue` is the whatever value is selected from the `entities` reducer fo
 Use the `connectRequest` higher-order component to declare network dependencies for a React component. `connectRequest` takes a function that transforms the component `props` to a request query config or an array of request query configs. Example usage:
 
 ```javascript
-import { connectRequest } from 'redux-query';
-import { connect } from 'react-redux';
+import { connectRequest } from 'redux-query-immutable';
+import { connect } from 'react-redux-immutable';
 
 class Dashboard extends Component {
     ...
@@ -136,14 +137,12 @@ class Dashboard extends Component {
 const DashboardContainer = connectRequest((props) => ({
     url: `/api/dashboard/${props.dashboardId}`,
     update: {
-        chartsById: (prevCharts, dashboardCharts) => ({
-            ...prevCharts,
-            ...dashboardCharts,
-        }),
-        dashboardsById: (prevDashboards, dashboards) => ({
-            ...prevDashboards,
-            ...dashboards,
-        }),
+        chartsById: (prevCharts, dashboardCharts) => (
+            prevCharts.mergeDeep(dashboardCharts)
+        ),
+        dashboardsById: (prevDashboards, dashboards) => (
+            prevDashboards.mergeDeep(dashboards)
+        ),
     },
 }))(Dashboard);
 
@@ -171,10 +170,9 @@ export const createUpdateDashboardQuery = (dashboardId, newName) => ({
         name: newName,
     },
     update: {
-        dashboardsById: (prevDashboardsById, newDashboardsById) => ({
-            ...prevDashboardsById,
-            ...newDashboardsById,
-        }),
+        dashboardsById: (prevDashboardsById, newDashboardsById) => (
+            prevDashboardsById.mergeDeep(newDashboardsById)
+        ),
     },
 });
 
@@ -190,11 +188,7 @@ export const updateDashboard = (dashboardId, newName) => {
 // src/selectors/dashboard.js
 
 export const getDashboard = (state, { dashboardId }) => {
-    if (state.entities.dashboardsById) {
-        return state.entities.dashboardsById[dashboardId];
-    } else {
-        return null;
-    }
+    return state.getIn(['entities', 'dashboardsById', dashboardId]);
 };
 
 // src/components/Dashboard.jsx
