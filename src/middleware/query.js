@@ -100,57 +100,60 @@ const queryMiddleware = (queriesSelector, entitiesSelector, config = defaultConf
 
                 const state = getState();
                 const queries = queriesSelector(state);
-
+                
                 const queriesState = queries.get(queryKey, new Map());
-                const isPending = queriesState.get(['isPending']);
-                const status = queriesState.get(['status']);
+                const isPending = queriesState.get('isPending');
+                const status = queriesState.get('status');
                 const hasSucceeded = status >= 200 && status < 300;
 
                 if (force || queriesState.isEmpty() || (retry && !isPending && !hasSucceeded)) {
-                    returnValue = new Promise((resolve) => {
-                        const start = new Date();
-                        const { method = httpMethods.GET } = options;
+                    returnValue = new Promise(
+                        (resolve) => {
+                            const start = new Date();
+                            const { method = httpMethods.GET } = options;
 
-                        const request = createRequest(url, method);
+                            const request = createRequest(url, method);
 
-                        if (body) {
-                            request.send(body);
-                        }
+                            if (body) {
+                                request.send(body);
+                            }
 
-                        if (options.headers) {
-                            request.set(options.headers);
-                        }
+                            if (options.headers) {
+                                request.set(options.headers);
+                            }
 
-                        if (options.credentials === 'include') {
-                            request.withCredentials();
-                        }
+                            if (options.credentials === 'include') {
+                                request.withCredentials();
+                            }
 
-                        let attempts = 0;
-                        const backoff = new Backoff({
-                            min: config.backoff.minDuration,
-                            max: config.backoff.maxDuration,
-                        });
+                            let attempts = 0;
+                            const backoff = new Backoff({
+                                min: config.backoff.minDuration,
+                                max: config.backoff.maxDuration,
+                            });
 
-                        const attemptRequest = () => {
-                            dispatch(requestStart(url, body, request, meta, queryKey));
-                            attempts += 1;
-                            request.end((err, response) => {
-                                const resOk = !!(response && response.ok);
-                                const resStatus = (response && response.status) || 0;
-                                const resBody = (response && response.body) || undefined;
-                                const resText = (response && response.text) || undefined;
+                            const attemptRequest = () => {
+                                dispatch(requestStart(url, body, request, meta, queryKey));
+                                attempts += 1;
+                                request.end((err, response) => {
+                                    const resOk = !!(response && response.ok);
+                                    const resStatus = (response && response.status) || 0;
+                                    const resBody = (response && response.body) || undefined;
+                                    const resText = (response && response.text) || undefined;
 
-                                let transformed;
-                                let newEntities;
+                                    let transformed;
+                                    let newEntities;
 
-                                if (err || !resOk) {
                                     if (
                                         includes(config.retryableStatusCodes, resStatus) &&
                                         attempts < config.backoff.maxAttempts
                                     ) {
                                         // TODO take into account Retry-After header if 503
                                         setTimeout(attemptRequest, backoff.duration());
-                                    } else {
+                                        return;
+                                    }
+
+                                    if (err || !resOk) {
                                         dispatch(
                                             requestFailure(
                                                 url,
@@ -161,30 +164,29 @@ const queryMiddleware = (queriesSelector, entitiesSelector, config = defaultConf
                                                 queryKey
                                             )
                                         );
+                                    } else {
+                                        const callbackState = getState();
+                                        const entities = entitiesSelector(callbackState);
+                                        transformed = fromJS(transform(resBody, resText));
+                                        newEntities = updateEntities(update, entities, transformed);
+                                        dispatch(requestSuccess(url, body, resStatus, newEntities, meta, queryKey));
                                     }
-                                } else {
-                                    const callbackState = getState();
-                                    const entities = entitiesSelector(callbackState);
-                                    transformed = fromJS(transform(resBody, resText));
-                                    newEntities = updateEntities(update, entities, transformed);
-                                    dispatch(requestSuccess(url, body, resStatus, newEntities, meta, queryKey));
-                                }
 
-                                const end = new Date();
-                                const duration = end - start;
-                                resolve({
-                                    body: resBody,
-                                    duration,
-                                    status: resStatus,
-                                    text: resText,
-                                    transformed,
-                                    entities: newEntities,
+                                    const end = new Date();
+                                    const duration = end - start;
+                                    resolve({
+                                        body: resBody,
+                                        duration,
+                                        status: resStatus,
+                                        text: resText,
+                                        transformed,
+                                        entities: newEntities,
+                                    });
                                 });
-                            });
-                        };
+                            };
 
-                        attemptRequest();
-                    });
+                            attemptRequest();
+                        });
                 }
 
                 break;

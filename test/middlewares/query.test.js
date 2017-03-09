@@ -270,7 +270,7 @@ describe('query middleware', () => {
             }));
             const nextHandler = queryMiddleware(queriesSelector, entitiesSelector)({ dispatch, getState });
             const actionHandler = nextHandler();
-            actionHandler({
+            const requestAction = actionHandler({
                 type: actionTypes.REQUEST_ASYNC,
                 url,
                 update: {
