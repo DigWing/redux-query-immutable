@@ -1,12 +1,10 @@
-# redux-query
+# redux-query-immutable
 
-[![Travis](https://img.shields.io/travis/amplitude/redux-query.svg?style=flat-square)](https://travis-ci.org/amplitude/redux-query)
 [![npm](https://img.shields.io/npm/v/redux-query.svg?style=flat-square)](https://www.npmjs.com/package/redux-query)
-[![Codecov](https://img.shields.io/codecov/c/github/amplitude/redux-query.svg?style=flat-square)](https://codecov.io/gh/amplitude/redux-query)
 
-`redux-query` is a library for querying and managing network state in React/Redux applications.
+`redux-query-immutable` is a fork of the [redux-query](https://github.com/amplitude/redux-query) library, that supports redux store based on [ImmutableJS](https://facebook.github.io/immutable-js/).
 
-With `redux-query` you can:
+With `redux-query-immutable` you can:
 
 - Declare your network dependencies right next to your React components. Data is requested automatically when components mount. When components update and unmount, in-flight requests are automatically cancelled.
 - Trigger server-side changes (mutations) by dispatching regular Redux actions.
@@ -18,7 +16,7 @@ With `redux-query` you can:
 
 ## Getting Started
 
-Install `redux-query` via npm:
+Install `redux-query-immutable` via npm:
 
 ```
 $ npm install --save redux-query

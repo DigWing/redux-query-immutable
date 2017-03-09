@@ -33,7 +33,7 @@
     "REST",
     "ImmutableJS"
   ],
-  "author": "Martin Malfertheiner <martin.malfertheiner@holidu.com>",
+  "author": "Michael Siebers <michael.siebers@holidu.com>",
   "license": "MIT",
   "dependencies": {
     "backo": "^1.1.0",
