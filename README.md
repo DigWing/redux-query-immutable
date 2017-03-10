@@ -43,7 +43,7 @@ const store = createStore(
 
 ### `connectRequest`
 
-This is an update version of the  `connectRequest` higher-order component example from the original `redux-query` library.
+This is an updated version of the `connectRequest` higher-order component example from the original `redux-query` library.
 The biggest change to the original example is that you now have immutable data in the update functions.
 
 ```javascript
