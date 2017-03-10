@@ -1,6 +1,6 @@
 # redux-query-immutable
 
-[![npm](https://img.shields.io/npm/v/redux-query.svg?style=flat-square)](https://www.npmjs.com/package/redux-query-immutable)
+[![npm](https://img.shields.io/npm/v/redux-query-immutable.svg?style=flat-square)](https://www.npmjs.com/package/redux-query-immutable)
 
 `redux-query-immutable` is a fork of the [redux-query](https://github.com/amplitude/redux-query) library, that supports redux store based on [ImmutableJS](https://facebook.github.io/immutable-js/).
 
