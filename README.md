@@ -19,7 +19,7 @@ With `redux-query-immutable` you can:
 Install `redux-query-immutable` via npm:
 
 ```
-$ npm install --save redux-query
+$ npm install --save redux-query-immutable
 ```
 
 Add the `entitiesReducer` and `queriesReducer` to your combined reducer.
@@ -34,8 +34,8 @@ import { combineReducers } from 'redux-immutable'
 import { entitiesReducer, queriesReducer, queryMiddleware } from 'redux-query-immutable';
 import createLogger from 'redux-logger';
 
-export const getQueries = (state) => state.queries;
-export const getEntities = (state) => state.entities;
+export const getQueries = (state) => state.get('queries');
+export const getEntities = (state) => state.get('entities');
 
 const reducer = combineReducers({
     entities: entitiesReducer,
