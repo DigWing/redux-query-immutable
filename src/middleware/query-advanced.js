@@ -2,7 +2,7 @@ import Backoff from 'backo';
 import invariant from 'invariant';
 import identity from 'lodash.identity';
 import includes from 'lodash.includes';
-import { fromJS, Map } from 'immutable'
+import { fromJS, Map } from 'immutable';
 
 import {
     requestStart,
@@ -132,7 +132,6 @@ const queryMiddlewareAdvanced = (networkAdapter) => (queriesSelector, entitiesSe
                                         resHeaders
                                     ));
                                 } else {
-
                                     const callbackState = getState();
                                     const entities = entitiesSelector(callbackState);
                                     transformed = fromJS(transform(resBody, resText));
