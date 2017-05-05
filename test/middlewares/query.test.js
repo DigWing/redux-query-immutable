@@ -63,7 +63,7 @@ superagentMock(superagent, superagentMockConfig);
 const mockDispatchToAssertActions = (actionsToDispatch, done) => {
     let actionsLeft = actionsToDispatch;
 
-    return (action) => {
+    return action => {
         // Don't do a deep equal, just check type, url, and status fields
         Object.keys(actionsLeft[0])
             .forEach((keyToCheck) => {
@@ -106,10 +106,10 @@ describe('query middleware', () => {
             assert.isFunction(actionHandler);
         });
 
-        it('must pass action to `next` if not a redux-query action', (done) => {
+        it('must pass action to `next` if not a redux-query action', done => {
             const actionObj = {};
 
-            const actionHandler = nextHandler((action) => {
+            const actionHandler = nextHandler(action => {
                 assert.strictEqual(action, actionObj);
                 done();
             });
@@ -122,7 +122,7 @@ describe('query middleware', () => {
         const queriesSelector = (state) => state.get('queries');
         const entitiesSelector = (state) => state.get('entities');
 
-        it('by dispatching start and success actions', (done) => {
+        it('by dispatching start and success actions', done => {
             const url = '/api';
             const actionsToDispatch = [
                 {
@@ -143,7 +143,10 @@ describe('query middleware', () => {
                 entities: {},
                 queries: {},
             });
-            const nextHandler = queryMiddleware(queriesSelector, entitiesSelector)({ dispatch, getState });
+            const nextHandler = queryMiddleware(queriesSelector, entitiesSelector)({
+                dispatch,
+                getState,
+            });
             const actionHandler = nextHandler();
             actionHandler({
                 type: actionTypes.REQUEST_ASYNC,
@@ -154,7 +157,7 @@ describe('query middleware', () => {
             });
         });
 
-        it('should use query key if provided', (done) => {
+        it('should use query key if provided', done => {
             const url = '/api';
             const queryKey = '@specialSnowflake';
             const actionsToDispatch = [
@@ -178,7 +181,10 @@ describe('query middleware', () => {
                 entities: {},
                 queries: {},
             });
-            const nextHandler = queryMiddleware(queriesSelector, entitiesSelector)({ dispatch, getState });
+            const nextHandler = queryMiddleware(queriesSelector, entitiesSelector)({
+                dispatch,
+                getState,
+            });
             const actionHandler = nextHandler();
             actionHandler({
                 type: actionTypes.REQUEST_ASYNC,
@@ -190,7 +196,7 @@ describe('query middleware', () => {
             });
         });
 
-        it('should use headers if provided as an option', (done) => {
+        it('should use headers if provided as an option', done => {
             const url = '/echo-headers';
             const headers = { 'x-message': apiMessage };
             const actionsToDispatch = [
@@ -212,7 +218,10 @@ describe('query middleware', () => {
                 entities: {},
                 queries: {},
             });
-            const nextHandler = queryMiddleware(queriesSelector, entitiesSelector)({ dispatch, getState });
+            const nextHandler = queryMiddleware(queriesSelector, entitiesSelector)({
+                dispatch,
+                getState,
+            });
             const actionHandler = nextHandler();
             actionHandler({
                 type: actionTypes.REQUEST_ASYNC,
@@ -280,7 +289,7 @@ describe('query middleware', () => {
             });
         });
 
-        it('should fetch with `retry` if request by same URL is not pending and has not succeeded', (done) => {
+        it('should fetch with `retry` if request by same URL is not pending and has not succeeded', done => {
             const url = '/api';
             const actionsToDispatch = [
                 {
@@ -319,7 +328,7 @@ describe('query middleware', () => {
             });
         });
 
-        it('should fetch with `force` even though request by same URL has succeeded', (done) => {
+        it('should fetch with `force` even though request by same URL has succeeded', done => {
             const url = '/api';
             const actionsToDispatch = [
                 {
@@ -363,7 +372,7 @@ describe('query middleware', () => {
         const queriesSelector = (state) => state.get('queries');
         const entitiesSelector = (state) => state.get('entities');
 
-        it('by dispatching start and success actions', (done) => {
+        it('by dispatching start and success actions', done => {
             const url = '/api';
             const actionsToDispatch = [
                 {
@@ -395,7 +404,7 @@ describe('query middleware', () => {
             });
         });
 
-        it('should use query key if provided', (done) => {
+        it('should use query key if provided', done => {
             const url = '/api';
             const queryKey = '@specialHailChunk';
             const actionsToDispatch = [
@@ -431,7 +440,7 @@ describe('query middleware', () => {
             });
         });
 
-        it('should use headers if provided as an option', (done) => {
+        it('should use headers if provided as an option', done => {
             const url = '/echo-headers';
             const headers = { 'x-message': apiMessage };
             const actionsToDispatch = [
@@ -467,7 +476,7 @@ describe('query middleware', () => {
             });
         });
 
-        it('by supporting optimistic updates', (done) => {
+        it('by supporting optimistic updates', done => {
             const url = '/api';
             const optimisticMessage = 'hello, optimistic world!';
             const actionsToDispatch = [
@@ -508,7 +517,7 @@ describe('query middleware', () => {
             });
         });
 
-        it('by reverting optimistic updates in case of failure', (done) => {
+        it('by reverting optimistic updates in case of failure', done => {
             const url = '/bad-url';
             const optimisticMessage = 'hello, optimistic world!';
             const actionsToDispatch = [
@@ -554,7 +563,7 @@ describe('query middleware', () => {
         const queriesSelector = (state) => state.get('queries');
         const entitiesSelector = (state) => state.get('entities');
 
-        it('by canceling pending request', (done) => {
+        it('by canceling pending request', done => {
             const url = '/api';
             const dispatch = () => {
                 assert.fail();
@@ -583,7 +592,7 @@ describe('query middleware', () => {
             });
         });
 
-        it('by canceling pending mutation', (done) => {
+        it('by canceling pending mutation', done => {
             const url = '/api';
             const dispatch = () => {
                 assert.fail();
@@ -617,8 +626,7 @@ describe('query middleware', () => {
     describe('must handle being reset', () => {
         const queriesSelector = (state) => state.get('queries');
         const entitiesSelector = (state) => state.get('entities');
-
-        it('by canceling all pending queries', (done) => {
+        it('by canceling all pending queries', done => {
             const dispatch = () => {
                 assert.fail();
             };
