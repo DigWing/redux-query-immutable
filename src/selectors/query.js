@@ -12,22 +12,22 @@ const getQueryState = (urlOrConfig, body, queriesState, queryStateKey) => {
     return queriesState.getIn([queryKey, queryStateKey]);
 };
 
-export const isFinished = (urlOrConfig, body) => (queriesState) => {
+export const isFinished = (urlOrConfig, body) => queriesState => {
     return getQueryState(urlOrConfig, body, queriesState, 'isFinished');
 };
 
-export const isPending = (urlOrConfig, body) => (queriesState) => {
+export const isPending = (urlOrConfig, body) => queriesState => {
     return getQueryState(urlOrConfig, body, queriesState, 'isPending');
 };
 
-export const status = (urlOrConfig, body) => (queriesState) => {
+export const status = (urlOrConfig, body) => queriesState => {
     return getQueryState(urlOrConfig, body, queriesState, 'status');
 };
 
-export const lastUpdated = (urlOrConfig, body) => (queriesState) => {
+export const lastUpdated = (urlOrConfig, body) => queriesState => {
     return getQueryState(urlOrConfig, body, queriesState, 'lastUpdated');
 };
 
-export const queryCount = (urlOrConfig, body) => (queriesState) => {
+export const queryCount = (urlOrConfig, body) => queriesState => {
     return getQueryState(urlOrConfig, body, queriesState, 'queryCount');
 };

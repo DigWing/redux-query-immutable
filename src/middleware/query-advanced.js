@@ -12,18 +12,24 @@ import { reconcileQueryKey } from '../lib/query-key';
 
 const updateEntities = (update, entities = Map(), transformed = Map()) => {
     // If update, not supplied, then no change to entities should be made
-    return Object.keys(update || {}).reduce((accum, key) => {
-        return accum.set(key, update[key](entities.get(key), transformed.get(key)));
-    }, new Map());
+    return Object.keys(update || {}).reduce(
+        (accum, key) => {
+            return accum.set(key, update[key](entities.get(key), transformed.get(key)));
+        },
+        new Map()
+    );
 };
 
 const optimisticUpdateEntities = (optimisticUpdate, entities = Map()) => {
-    return Object.keys(optimisticUpdate).reduce((accum, key) => {
-        if (optimisticUpdate[key]) {
-            return accum.set(key, optimisticUpdate[key](entities.get(key)));
-        }
-        return accum.set(key, entities.get(key));
-    }, new Map());
+    return Object.keys(optimisticUpdate).reduce(
+        (accum, key) => {
+            if (optimisticUpdate[key]) {
+                return accum.set(key, optimisticUpdate[key](entities.get(key)));
+            }
+            return accum.set(key, entities.get(key));
+        },
+        new Map()
+    );
 };
 
 const defaultConfig = {
@@ -41,8 +47,8 @@ const defaultConfig = {
     ],
 };
 
-const getPendingQueries = (queries) => {
-    return queries.filter((query) => query.get('isPending'));
+const getPendingQueries = queries => {
+    return queries.filter(query => query.get('isPending'));
 };
 
 const resOk = status => Math.floor(status / 100) === 2;
@@ -79,7 +85,7 @@ const queryMiddlewareAdvanced = networkAdapter => (queriesSelector, entitiesSele
                 const hasSucceeded = status >= 200 && status < 300;
 
                 if (force || queriesState.isEmpty() || (retry && !isPending && !hasSucceeded)) {
-                    returnValue = new Promise((resolve) => {
+                    returnValue = new Promise(resolve => {
                         const start = new Date();
                         const { method = httpMethods.GET } = options;
 
@@ -96,7 +102,7 @@ const queryMiddlewareAdvanced = networkAdapter => (queriesSelector, entitiesSele
                         });
 
                         const attemptRequest = () => {
-                            dispatch(requestStart(url, body, request.instance, meta, queryKey));
+                            dispatch(requestStart(url, body, request, meta, queryKey));
 
                             attempts += 1;
 
@@ -199,7 +205,7 @@ const queryMiddlewareAdvanced = networkAdapter => (queriesSelector, entitiesSele
 
                     // Note: only the entities that are included in `optimisticUpdate` will be passed along in the
                     // `mutateStart` action as `optimisticEntities`
-                    dispatch(mutateStart(url, body, request.instance, optimisticEntities, queryKey, meta));
+                    dispatch(mutateStart(url, body, request, optimisticEntities, queryKey, meta));
 
                     request.execute((err, resStatus, resBody, resText, resHeaders) => {
                         let transformed;
@@ -276,7 +282,7 @@ const queryMiddlewareAdvanced = networkAdapter => (queriesSelector, entitiesSele
                 const queries = queriesSelector(state);
                 const pendingQueries = getPendingQueries(queries);
 
-                pendingQueries.forEach((query) => query.getIn(['request', 'abort'])());
+                pendingQueries.forEach(query => query.getIn(['request', 'abort'])());
                 returnValue = next(action);
 
                 break;

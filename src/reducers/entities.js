@@ -24,9 +24,12 @@ const entities = (state = initialState, action) => {
     } else if (action.type === actionTypes.REQUEST_SUCCESS || action.type === actionTypes.MUTATE_SUCCESS) {
         return state.merge(action.entities);
     } else if (action.type === actionTypes.REMOVE_ENTITIES) {
-        return action.paths.reduce((accum, path) => {
-            return withoutPath(accum, path);
-        }, state);
+        return action.paths.reduce(
+            (accum, path) => {
+                return withoutPath(accum, path);
+            },
+            state
+        );
     } else if (action.type === actionTypes.REMOVE_ENTITY) {
         return withoutPath(state, action.path);
     } else {
