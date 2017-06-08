@@ -15,7 +15,7 @@ const queries = (state = initialState, action) => {
                     url: action.url,
                     isFinished: false,
                     isPending: true,
-                    request: action.request,
+                    networkHandler: action.networkHandler,
                     isMutation: action.type === actionTypes.MUTATE_START,
                     queryCount: state.get(action.queryKey) ? state.getIn([action.queryKey, 'queryCount']) + 1 : 1,
                 },

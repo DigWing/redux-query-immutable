@@ -1,36 +1,15 @@
 import Backoff from 'backo';
 import invariant from 'invariant';
+import { fromJS, Map, Set } from 'immutable';
 import identity from 'lodash.identity';
 import includes from 'lodash.includes';
-import { fromJS, Map } from 'immutable';
 
 import { requestStart, requestFailure, requestSuccess, mutateStart, mutateFailure, mutateSuccess } from '../actions';
 import * as actionTypes from '../constants/action-types';
 import * as httpMethods from '../constants/http-methods';
 import * as statusCodes from '../constants/status-codes';
-import { reconcileQueryKey } from '../lib/query-key';
-
-const updateEntities = (update, entities = Map(), transformed = Map()) => {
-    // If update, not supplied, then no change to entities should be made
-    return Object.keys(update || {}).reduce(
-        (accum, key) => {
-            return accum.set(key, update[key](entities.get(key), transformed.get(key)));
-        },
-        new Map()
-    );
-};
-
-const optimisticUpdateEntities = (optimisticUpdate, entities = Map()) => {
-    return Object.keys(optimisticUpdate).reduce(
-        (accum, key) => {
-            if (optimisticUpdate[key]) {
-                return accum.set(key, optimisticUpdate[key](entities.get(key)));
-            }
-            return accum.set(key, entities.get(key));
-        },
-        new Map()
-    );
-};
+import { getQueryKey } from '../lib/query-key';
+import { updateEntities, optimisticUpdateEntities, rollbackEntities } from '../lib/update';
 
 const defaultConfig = {
     backoff: {
@@ -51,30 +30,27 @@ const getPendingQueries = queries => {
     return queries.filter(query => query.get('isPending'));
 };
 
+const keyIn = keys => {
+    const keySet = Set(keys);
+    return (v, k) => {
+        return keySet.has(k);
+    };
+};
+
 const resOk = status => Math.floor(status / 100) === 2;
 
-const queryMiddlewareAdvanced = networkAdapter => (queriesSelector, entitiesSelector, config = defaultConfig) => {
+const queryMiddlewareAdvanced = networkInterface => (queriesSelector, entitiesSelector, config = defaultConfig) => {
     return ({ dispatch, getState }) => next => action => {
-        // TODO(ryan): add warnings when there are simultaneous requests and mutation queries for the same entities
         let returnValue;
 
         switch (action.type) {
             case actionTypes.REQUEST_ASYNC: {
-                const {
-                    url,
-                    body,
-                    force,
-                    retry,
-                    transform = identity,
-                    update,
-                    options = {},
-                    meta,
-                } = action;
+                const { url, body, force, retry, transform = identity, update, options = {}, meta } = action;
 
                 invariant(!!url, 'Missing required `url` field in action handler');
                 invariant(!!update, 'Missing required `update` field in action handler');
 
-                const queryKey = reconcileQueryKey(action);
+                const queryKey = getQueryKey(action);
 
                 const state = getState();
                 const queries = queriesSelector(state);
@@ -88,13 +64,6 @@ const queryMiddlewareAdvanced = networkAdapter => (queriesSelector, entitiesSele
                     returnValue = new Promise(resolve => {
                         const start = new Date();
                         const { method = httpMethods.GET } = options;
-
-                        const request = networkAdapter(url, method, {
-                            body,
-                            headers: options.headers,
-                            credentials: options.credentials,
-                        });
-
                         let attempts = 0;
                         const backoff = new Backoff({
                             min: config.backoff.minDuration,
@@ -102,13 +71,27 @@ const queryMiddlewareAdvanced = networkAdapter => (queriesSelector, entitiesSele
                         });
 
                         const attemptRequest = () => {
-                            dispatch(requestStart(url, body, request, meta, queryKey));
+                            const networkHandler = networkInterface(url, method, {
+                                body,
+                                headers: options.headers,
+                                credentials: options.credentials,
+                            });
+
+                            dispatch(
+                                requestStart({
+                                    body,
+                                    meta,
+                                    networkHandler,
+                                    queryKey,
+                                    url,
+                                })
+                            );
 
                             attempts += 1;
 
-                            request.execute((err, resStatus, resBody, resText, resHeaders) => {
+                            networkHandler.execute((err, status, responseBody, responseText, responseHeaders) => {
                                 if (
-                                    includes(config.retryableStatusCodes, resStatus) &&
+                                    includes(config.retryableStatusCodes, status) &&
                                     attempts < config.backoff.maxAttempts
                                 ) {
                                     // TODO take into account Retry-After header if 503
@@ -116,53 +99,66 @@ const queryMiddlewareAdvanced = networkAdapter => (queriesSelector, entitiesSele
                                     return;
                                 }
 
+                                const end = new Date();
+                                const duration = end - start;
                                 let transformed;
                                 let newEntities;
 
-                                if (err || !resOk(resStatus)) {
+                                if (action.unstable_preDispatchCallback) {
+                                    action.unstable_preDispatchCallback();
+                                }
+
+                                if (err || !resOk(status)) {
                                     dispatch(
-                                        requestFailure(
-                                            url,
+                                        requestFailure({
                                             body,
-                                            resStatus,
-                                            resBody,
                                             meta,
                                             queryKey,
-                                            resText,
-                                            resHeaders
-                                        )
+                                            responseBody,
+                                            responseHeaders,
+                                            status,
+                                            responseText,
+                                            url,
+                                        })
                                     );
+
+                                    resolve({
+                                        body: responseBody,
+                                        duration,
+                                        status: status,
+                                        text: responseText,
+                                        headers: responseHeaders,
+                                    });
                                 } else {
                                     const callbackState = getState();
                                     const entities = entitiesSelector(callbackState);
-                                    transformed = fromJS(transform(resBody, resText));
+                                    transformed = fromJS(transform(responseBody, responseText));
                                     newEntities = updateEntities(update, entities, transformed);
-                                    dispatch(
-                                        requestSuccess(
-                                            url,
-                                            body,
-                                            resStatus,
-                                            newEntities,
-                                            meta,
-                                            queryKey,
-                                            resBody,
-                                            resText,
-                                            resHeaders
-                                        )
-                                    );
-                                }
 
-                                const end = new Date();
-                                const duration = end - start;
-                                resolve({
-                                    body: resBody,
-                                    duration,
-                                    status: resStatus,
-                                    text: resText,
-                                    transformed,
-                                    entities: newEntities,
-                                    headers: resHeaders,
-                                });
+                                    dispatch(
+                                        requestSuccess({
+                                            body,
+                                            meta,
+                                            entities: newEntities,
+                                            queryKey,
+                                            responseBody,
+                                            responseHeaders,
+                                            status,
+                                            responseText,
+                                            url,
+                                        })
+                                    );
+
+                                    resolve({
+                                        body: responseBody,
+                                        duration,
+                                        status,
+                                        text: responseText,
+                                        transformed,
+                                        entities: newEntities,
+                                        headers: responseHeaders,
+                                    });
+                                }
                             });
                         };
 
@@ -177,6 +173,7 @@ const queryMiddlewareAdvanced = networkAdapter => (queriesSelector, entitiesSele
                     url,
                     transform = identity,
                     update,
+                    rollback,
                     body,
                     optimisticUpdate,
                     options = {},
@@ -184,20 +181,21 @@ const queryMiddlewareAdvanced = networkAdapter => (queriesSelector, entitiesSele
                 } = action;
                 invariant(!!url, 'Missing required `url` field in action handler');
 
-                const state = getState();
-                const entities = entitiesSelector(state);
+                const initialState = getState();
+                const initialEntities = entitiesSelector(initialState);
                 let optimisticEntities;
+
                 if (optimisticUpdate) {
-                    optimisticEntities = optimisticUpdateEntities(optimisticUpdate, entities);
+                    optimisticEntities = optimisticUpdateEntities(optimisticUpdate, initialEntities);
                 }
 
-                const queryKey = reconcileQueryKey(action);
+                const queryKey = getQueryKey(action);
 
                 returnValue = new Promise(resolve => {
                     const start = new Date();
                     const { method = httpMethods.POST } = options;
 
-                    const request = networkAdapter(url, method, {
+                    const networkHandler = networkInterface(url, method, {
                         body,
                         headers: options.headers,
                         credentials: options.credentials,
@@ -205,55 +203,85 @@ const queryMiddlewareAdvanced = networkAdapter => (queriesSelector, entitiesSele
 
                     // Note: only the entities that are included in `optimisticUpdate` will be passed along in the
                     // `mutateStart` action as `optimisticEntities`
-                    dispatch(mutateStart(url, body, request, optimisticEntities, queryKey, meta));
+                    dispatch(
+                        mutateStart({
+                            body,
+                            meta,
+                            networkHandler,
+                            optimisticEntities,
+                            queryKey,
+                            url,
+                        })
+                    );
 
-                    request.execute((err, resStatus, resBody, resText, resHeaders) => {
+                    networkHandler.execute((err, status, responseBody, responseText, responseHeaders) => {
+                        const end = new Date();
+                        const duration = end - start;
+                        const state = getState();
+                        const entities = entitiesSelector(state);
                         let transformed;
                         let newEntities;
 
-                        if (err || !resOk(resStatus)) {
-                            dispatch(
-                                mutateFailure(
-                                    url,
-                                    body,
-                                    resStatus,
-                                    entities,
-                                    queryKey,
-                                    resBody,
-                                    resText,
-                                    resHeaders,
-                                    meta
-                                )
-                            );
-                        } else {
-                            transformed = fromJS(transform(resBody, resText));
-                            newEntities = updateEntities(update, entities, transformed);
-                            dispatch(
-                                mutateSuccess(
-                                    url,
-                                    body,
-                                    resStatus,
-                                    newEntities,
-                                    queryKey,
-                                    resBody,
-                                    resText,
-                                    resHeaders,
-                                    meta
-                                )
-                            );
-                        }
+                        if (err || !resOk(status)) {
+                            let rolledBackEntities;
 
-                        const end = new Date();
-                        const duration = end - start;
-                        resolve({
-                            body: resBody,
-                            duration,
-                            status: resStatus,
-                            text: resText,
-                            transformed,
-                            entities: newEntities,
-                            headers: resHeaders,
-                        });
+                            if (optimisticUpdate) {
+                                rolledBackEntities = rollbackEntities(
+                                    rollback,
+                                    initialEntities.filter(keyIn(Object.keys(optimisticEntities.toObject()))),
+                                    entities.filter(keyIn(Object.keys(optimisticEntities.toObject())))
+                                );
+                            }
+
+                            dispatch(
+                                mutateFailure({
+                                    body,
+                                    meta,
+                                    queryKey,
+                                    responseBody,
+                                    responseHeaders,
+                                    status,
+                                    responseText,
+                                    rolledBackEntities,
+                                    url,
+                                })
+                            );
+
+                            resolve({
+                                body: responseBody,
+                                duration,
+                                status,
+                                text: responseText,
+                                headers: responseHeaders,
+                            });
+                        } else {
+                            transformed = fromJS(transform(responseBody, responseText));
+                            newEntities = updateEntities(update, entities, transformed);
+
+                            dispatch(
+                                mutateSuccess({
+                                    url,
+                                    body,
+                                    status,
+                                    entities: newEntities,
+                                    queryKey,
+                                    responseBody,
+                                    responseText,
+                                    responseHeaders,
+                                    meta,
+                                })
+                            );
+
+                            resolve({
+                                body: responseBody,
+                                duration,
+                                status,
+                                text: responseText,
+                                transformed,
+                                entities: newEntities,
+                                headers: responseHeaders,
+                            });
+                        }
                     });
                 });
 
@@ -268,7 +296,7 @@ const queryMiddlewareAdvanced = networkAdapter => (queriesSelector, entitiesSele
                 const pendingQueries = getPendingQueries(queries);
 
                 if (pendingQueries.has(queryKey)) {
-                    pendingQueries.getIn([queryKey, 'request', 'abort'])();
+                    pendingQueries.getIn([queryKey, 'networkHandler', 'abort'])();
                     returnValue = next(action);
                 } else {
                     console.warn('Trying to cancel a request that is not in flight: ', queryKey);
@@ -282,7 +310,7 @@ const queryMiddlewareAdvanced = networkAdapter => (queriesSelector, entitiesSele
                 const queries = queriesSelector(state);
                 const pendingQueries = getPendingQueries(queries);
 
-                pendingQueries.forEach(query => query.getIn(['request', 'abort'])());
+                pendingQueries.forEach(query => query.getIn(['networkHandler', 'abort'])());
                 returnValue = next(action);
 
                 break;

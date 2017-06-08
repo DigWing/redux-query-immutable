@@ -53,6 +53,7 @@ class ResultFrame extends Component {
       moduleId: 'Server',
     });
 
+    /* eslint-disable no-process-env */
     const srcs = [
       'https://unpkg.com/react@15/dist/react.min.js',
       'https://unpkg.com/react-dom@15/dist/react-dom.min.js',
@@ -61,8 +62,11 @@ class ResultFrame extends Component {
       'https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.25/browser-polyfill.min.js',
       'https://unpkg.com/redux-saga@0.14/dist/redux-saga.min.js',
       'https://unpkg.com/qs@6.0.4/dist/qs.js',
-      'https://unpkg.com/redux-query@1.5.0-alpha.1/dist/umd/redux-query.js',
+      process.env.NODE_ENV === 'development'
+        ? '/vendor/redux-query.js'
+        : '/redux-query/vendor/redux-query.js',
     ];
+    /* eslint-enable no-process-env */
 
     const contentWindow = this._iframeRef.contentWindow;
     contentWindow.document.open();
@@ -80,11 +84,11 @@ class ResultFrame extends Component {
     );
     contentWindow.document.write(
       `<script type="text/javascript">
-        var mockAdapter = function(url, method, config) {
+        var mockNetworkInterface = function(url, method, config) {
           var isExternalUrl = url.indexOf('://') > 0 || url.indexOf('//') === 0;
 
           if (isExternalUrl) {
-            return ReduxQuery.superagentAdapter.apply(ReduxQuery.superagentAdapter, arguments);
+            return ReduxQuery.networkInterfaces.superagent.apply(ReduxQuery.networkInterfaces.superagent, arguments);
           }
 
           var aborted = false;
@@ -128,7 +132,7 @@ class ResultFrame extends Component {
         };
 
         ReduxQuery = Object.assign({}, ReduxQuery, {
-          queryMiddleware: ReduxQuery.queryMiddlewareAdvanced(mockAdapter),
+          queryMiddleware: ReduxQuery.queryMiddlewareAdvanced(mockNetworkInterface),
         });
       </script>`
     );

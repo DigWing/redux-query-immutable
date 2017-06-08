@@ -7,17 +7,6 @@ import { fromJS } from 'immutable';
 
 describe('query selectors', () => {
     describe('isFinished', () => {
-        it('should work with just url', () => {
-            const isFinished = querySelectors.isFinished('/api/dashboards')(
-                fromJS({
-                    '{"url":"/api/dashboards"}': {
-                        isFinished: true,
-                    },
-                })
-            );
-            assert.isTrue(isFinished);
-        });
-
         it('should work with a config', () => {
             const queryConfig = {
                 url: '/api/dashboard/1/rename',
@@ -25,13 +14,14 @@ describe('query selectors', () => {
                     name: 'My KPIs',
                 },
             };
-            const queryKey = getQueryKey(queryConfig.url, queryConfig.body);
-            const isFinished = querySelectors.isFinished(queryConfig)(
+            const queryKey = getQueryKey(queryConfig);
+            const isFinished = querySelectors.isFinished(
                 fromJS({
                     [queryKey]: {
                         isFinished: true,
                     },
-                })
+                }),
+                queryConfig
             );
             assert.isTrue(isFinished);
         });
@@ -44,29 +34,19 @@ describe('query selectors', () => {
                 },
                 queryKey: 'myQueryKey',
             };
-            const isFinished = querySelectors.isFinished(queryConfig)(
+            const isFinished = querySelectors.isFinished(
                 fromJS({
                     myQueryKey: {
                         isFinished: true,
                     },
-                })
+                }),
+                queryConfig
             );
             assert.isTrue(isFinished);
         });
     });
 
     describe('isPending', () => {
-        it('should work with just url', () => {
-            const isPending = querySelectors.isPending('/api/dashboards')(
-                fromJS({
-                    '{"url":"/api/dashboards"}': {
-                        isPending: true,
-                    },
-                })
-            );
-            assert.isTrue(isPending);
-        });
-
         it('should work with a config', () => {
             const queryConfig = {
                 url: '/api/dashboard/1/rename',
@@ -74,13 +54,14 @@ describe('query selectors', () => {
                     name: 'My KPIs',
                 },
             };
-            const queryKey = getQueryKey(queryConfig.url, queryConfig.body);
-            const isPending = querySelectors.isPending(queryConfig)(
+            const queryKey = getQueryKey(queryConfig);
+            const isPending = querySelectors.isPending(
                 fromJS({
                     [queryKey]: {
                         isPending: true,
                     },
-                })
+                }),
+                queryConfig
             );
             assert.isTrue(isPending);
         });
@@ -93,29 +74,19 @@ describe('query selectors', () => {
                 },
                 queryKey: 'myQueryKey',
             };
-            const isPending = querySelectors.isPending(queryConfig)(
+            const isPending = querySelectors.isPending(
                 fromJS({
                     myQueryKey: {
                         isPending: true,
                     },
-                })
+                }),
+                queryConfig
             );
             assert.isTrue(isPending);
         });
     });
 
     describe('status', () => {
-        it('should work with just url', () => {
-            const status = querySelectors.status('/api/dashboards')(
-                fromJS({
-                    '{"url":"/api/dashboards"}': {
-                        status: 200,
-                    },
-                })
-            );
-            assert.equal(status, 200);
-        });
-
         it('should work with a config', () => {
             const queryConfig = {
                 url: '/api/dashboard/1/rename',
@@ -123,13 +94,14 @@ describe('query selectors', () => {
                     name: 'My KPIs',
                 },
             };
-            const queryKey = getQueryKey(queryConfig.url, queryConfig.body);
-            const status = querySelectors.status(queryConfig)(
+            const queryKey = getQueryKey(queryConfig);
+            const status = querySelectors.status(
                 fromJS({
                     [queryKey]: {
                         status: 200,
                     },
-                })
+                }),
+                queryConfig
             );
             assert.equal(status, 200);
         });
@@ -142,29 +114,19 @@ describe('query selectors', () => {
                 },
                 queryKey: 'myQueryKey',
             };
-            const status = querySelectors.status(queryConfig)(
+            const status = querySelectors.status(
                 fromJS({
                     myQueryKey: {
                         status: 200,
                     },
-                })
+                }),
+                queryConfig
             );
             assert.equal(status, 200);
         });
     });
 
     describe('lastUpdated', () => {
-        it('should work with just url', () => {
-            const lastUpdated = querySelectors.lastUpdated('/api/dashboards')(
-                fromJS({
-                    '{"url":"/api/dashboards"}': {
-                        lastUpdated: 1488471746117,
-                    },
-                })
-            );
-            assert.equal(lastUpdated, 1488471746117);
-        });
-
         it('should work with a config', () => {
             const queryConfig = {
                 url: '/api/dashboard/1/rename',
@@ -172,13 +134,14 @@ describe('query selectors', () => {
                     name: 'My KPIs',
                 },
             };
-            const queryKey = getQueryKey(queryConfig.url, queryConfig.body);
-            const lastUpdated = querySelectors.lastUpdated(queryConfig)(
+            const queryKey = getQueryKey(queryConfig);
+            const lastUpdated = querySelectors.lastUpdated(
                 fromJS({
                     [queryKey]: {
                         lastUpdated: 1488471746117,
                     },
-                })
+                }),
+                queryConfig
             );
             assert.equal(lastUpdated, 1488471746117);
         });
@@ -191,29 +154,19 @@ describe('query selectors', () => {
                 },
                 queryKey: 'myQueryKey',
             };
-            const lastUpdated = querySelectors.lastUpdated(queryConfig)(
+            const lastUpdated = querySelectors.lastUpdated(
                 fromJS({
                     myQueryKey: {
                         lastUpdated: 1488471746117,
                     },
-                })
+                }),
+                queryConfig
             );
             assert.equal(lastUpdated, 1488471746117);
         });
     });
 
     describe('queryCount', () => {
-        it('should work with just url', () => {
-            const queryCount = querySelectors.queryCount('/api/dashboards')(
-                fromJS({
-                    '{"url":"/api/dashboards"}': {
-                        queryCount: 2,
-                    },
-                })
-            );
-            assert.equal(queryCount, 2);
-        });
-
         it('should work with a config', () => {
             const queryConfig = {
                 url: '/api/dashboard/1/rename',
@@ -221,13 +174,14 @@ describe('query selectors', () => {
                     name: 'My KPIs',
                 },
             };
-            const queryKey = getQueryKey(queryConfig.url, queryConfig.body);
-            const queryCount = querySelectors.queryCount(queryConfig)(
+            const queryKey = getQueryKey(queryConfig);
+            const queryCount = querySelectors.queryCount(
                 fromJS({
                     [queryKey]: {
                         queryCount: 2,
                     },
-                })
+                }),
+                queryConfig
             );
             assert.equal(queryCount, 2);
         });
@@ -240,12 +194,13 @@ describe('query selectors', () => {
                 },
                 queryKey: 'myQueryKey',
             };
-            const queryCount = querySelectors.queryCount(queryConfig)(
+            const queryCount = querySelectors.queryCount(
                 fromJS({
                     myQueryKey: {
                         queryCount: 2,
                     },
-                })
+                }),
+                queryConfig
             );
             assert.equal(queryCount, 2);
         });

@@ -1,33 +1,29 @@
-import { reconcileQueryKey } from '../lib/query-key';
+import { getQueryKey } from '../lib/query-key';
 
-const getQueryState = (urlOrConfig, body, queriesState, queryStateKey) => {
-    let queryKey;
+const getQueryState = (queriesState, queryConfig, queryStateKey) => {
+    if (queryConfig) {
+        const queryKey = getQueryKey(queryConfig);
 
-    if (typeof urlOrConfig === 'string') {
-        queryKey = reconcileQueryKey({ url: urlOrConfig, body });
-    } else {
-        queryKey = reconcileQueryKey(urlOrConfig);
+        return queriesState.getIn([queryKey, queryStateKey]);
     }
-
-    return queriesState.getIn([queryKey, queryStateKey]);
 };
 
-export const isFinished = (urlOrConfig, body) => queriesState => {
-    return getQueryState(urlOrConfig, body, queriesState, 'isFinished');
+export const isFinished = (queriesState, queryConfig) => {
+    return getQueryState(queriesState, queryConfig, 'isFinished');
 };
 
-export const isPending = (urlOrConfig, body) => queriesState => {
-    return getQueryState(urlOrConfig, body, queriesState, 'isPending');
+export const isPending = (queriesState, queryConfig) => {
+    return getQueryState(queriesState, queryConfig, 'isPending');
 };
 
-export const status = (urlOrConfig, body) => queriesState => {
-    return getQueryState(urlOrConfig, body, queriesState, 'status');
+export const status = (queriesState, queryConfig) => {
+    return getQueryState(queriesState, queryConfig, 'status');
 };
 
-export const lastUpdated = (urlOrConfig, body) => queriesState => {
-    return getQueryState(urlOrConfig, body, queriesState, 'lastUpdated');
+export const lastUpdated = (queriesState, queryConfig) => {
+    return getQueryState(queriesState, queryConfig, 'lastUpdated');
 };
 
-export const queryCount = (urlOrConfig, body) => queriesState => {
-    return getQueryState(urlOrConfig, body, queriesState, 'queryCount');
+export const queryCount = (queriesState, queryConfig) => {
+    return getQueryState(queriesState, queryConfig, 'queryCount');
 };

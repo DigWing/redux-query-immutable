@@ -14,13 +14,13 @@ const createRequest = (url, method, body) => {
         case httpMethods.PATCH:
             return superagent.patch(url, body);
         case httpMethods.DELETE:
-            return superagent.del(url, body);
+            return superagent.delete(url, body);
         default:
             throw new Error(`Unsupported HTTP method: ${method}`);
     }
 };
 
-const superagentNetworkAdapter = (url, method, { body, headers, credentials } = {}) => {
+const superagentNetworkInterface = (url, method, { body, headers, credentials } = {}) => {
     const request = createRequest(url, method, body);
 
     if (headers) {
@@ -31,14 +31,15 @@ const superagentNetworkAdapter = (url, method, { body, headers, credentials } = 
         request.withCredentials();
     }
 
-    const execute = cb => request.end((err, response) => {
-        const resStatus = (response && response.status) || 0;
-        const resBody = (response && response.body) || undefined;
-        const resText = (response && response.text) || undefined;
-        const resHeaders = (response && response.header) || undefined;
+    const execute = cb =>
+        request.end((err, response) => {
+            const resStatus = (response && response.status) || 0;
+            const resBody = (response && response.body) || undefined;
+            const resText = (response && response.text) || undefined;
+            const resHeaders = (response && response.header) || undefined;
 
-        cb(err, resStatus, resBody, resText, resHeaders);
-    });
+            cb(err, resStatus, resBody, resText, resHeaders);
+        });
 
     const abort = () => request.abort();
 
@@ -49,4 +50,4 @@ const superagentNetworkAdapter = (url, method, { body, headers, credentials } = 
     };
 };
 
-export default superagentNetworkAdapter;
+export default superagentNetworkInterface;

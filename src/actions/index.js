@@ -1,27 +1,27 @@
 import * as actionTypes from '../constants/action-types';
 
-export const requestStart = (url, body, request, meta, queryKey) => {
+export const requestStart = ({ body, meta, networkHandler, queryKey, url }) => {
     return {
         type: actionTypes.REQUEST_START,
         url,
         body,
-        request,
+        networkHandler,
         meta,
         queryKey,
     };
 };
 
-export const requestSuccess = (
-    url,
+export const requestSuccess = ({
     body,
-    status,
     entities,
     meta,
     queryKey,
     responseBody,
+    responseHeaders,
     responseText,
-    responseHeaders
-) => {
+    status,
+    url,
+}) => {
     return {
         type: actionTypes.REQUEST_SUCCESS,
         url,
@@ -37,7 +37,7 @@ export const requestSuccess = (
     };
 };
 
-export const requestFailure = (url, body, status, responseBody, meta, queryKey, responseText, responseHeaders) => {
+export const requestFailure = ({ body, meta, queryKey, responseBody, responseHeaders, responseText, status, url }) => {
     return {
         type: actionTypes.REQUEST_FAILURE,
         url,
@@ -52,29 +52,29 @@ export const requestFailure = (url, body, status, responseBody, meta, queryKey, 
     };
 };
 
-export const mutateStart = (url, body, request, optimisticEntities, queryKey, meta) => {
+export const mutateStart = ({ body, meta, networkHandler, optimisticEntities, queryKey, url }) => {
     return {
         type: actionTypes.MUTATE_START,
         url,
         body,
-        request,
+        networkHandler,
         optimisticEntities,
         queryKey,
         meta,
     };
 };
 
-export const mutateSuccess = (
-    url,
+export const mutateSuccess = ({
     body,
-    status,
     entities,
+    meta,
     queryKey,
     responseBody,
-    responseText,
     responseHeaders,
-    meta
-) => {
+    responseText,
+    status,
+    url,
+}) => {
     return {
         type: actionTypes.MUTATE_SUCCESS,
         url,
@@ -90,17 +90,17 @@ export const mutateSuccess = (
     };
 };
 
-export const mutateFailure = (
-    url,
+export const mutateFailure = ({
     body,
-    status,
-    originalEntities,
+    meta,
     queryKey,
     responseBody,
-    responseText,
     responseHeaders,
-    meta
-) => {
+    responseText,
+    rolledBackEntities,
+    status,
+    url,
+}) => {
     return {
         type: actionTypes.MUTATE_FAILURE,
         url,
@@ -109,26 +109,25 @@ export const mutateFailure = (
         responseBody,
         responseText,
         responseHeaders,
-        originalEntities,
+        rolledBackEntities,
         queryKey,
         time: Date.now(),
         meta,
     };
 };
 
-export const requestAsync = (
-    {
-        body,
-        force,
-        meta,
-        options,
-        queryKey,
-        retry,
-        transform,
-        update,
-        url,
-    }
-) => {
+export const requestAsync = ({
+    body,
+    force,
+    meta,
+    options,
+    queryKey,
+    retry,
+    transform,
+    update,
+    url,
+    unstable_preDispatchCallback,
+}) => {
     return {
         type: actionTypes.REQUEST_ASYNC,
         body,
@@ -140,21 +139,11 @@ export const requestAsync = (
         transform,
         update,
         url,
+        unstable_preDispatchCallback,
     };
 };
 
-export const mutateAsync = (
-    {
-        body,
-        meta,
-        optimisticUpdate,
-        options,
-        queryKey,
-        transform,
-        update,
-        url,
-    }
-) => {
+export const mutateAsync = ({ body, meta, optimisticUpdate, options, queryKey, rollback, transform, update, url }) => {
     return {
         type: actionTypes.MUTATE_ASYNC,
         body,
@@ -162,6 +151,7 @@ export const mutateAsync = (
         optimisticUpdate,
         options,
         queryKey,
+        rollback,
         transform,
         update,
         url,
@@ -175,16 +165,9 @@ export const cancelQuery = queryKey => {
     };
 };
 
-export const removeEntity = path => {
+export const updateEntities = update => {
     return {
-        type: actionTypes.REMOVE_ENTITY,
-        path,
-    };
-};
-
-export const removeEntities = paths => {
-    return {
-        type: actionTypes.REMOVE_ENTITIES,
-        paths,
+        type: actionTypes.UPDATE_ENTITIES,
+        update,
     };
 };

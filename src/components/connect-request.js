@@ -1,12 +1,11 @@
-import partial from 'lodash.partial';
 import difference from 'lodash.difference';
 import includes from 'lodash.includes';
 import intersection from 'lodash.intersection';
 import React from 'react';
-import shallowCompare from 'react-addons-shallow-compare';
 
 import { requestAsync, cancelQuery } from '../actions';
-import { reconcileQueryKey } from '../lib/query-key';
+import { getQueryKey } from '../lib/query-key';
+import shallowEqual from '../lib/shallow-equal';
 import storeShape from '../lib/store-shape';
 
 const ensureArray = maybe => {
@@ -14,8 +13,8 @@ const ensureArray = maybe => {
 };
 
 const diffConfigs = (prevConfigs, configs) => {
-    const prevQueryKeys = prevConfigs.map(reconcileQueryKey);
-    const queryKeys = configs.map(reconcileQueryKey);
+    const prevQueryKeys = prevConfigs.map(getQueryKey);
+    const queryKeys = configs.map(getQueryKey);
 
     const intersect = intersection(prevQueryKeys, queryKeys);
     const cancelKeys = difference(prevQueryKeys, intersect);
@@ -31,6 +30,8 @@ const connectRequest = (mapPropsToConfigs, options = {}) => WrappedComponent => 
         constructor() {
             super();
 
+            this.forceRequest = this.forceRequest.bind(this);
+
             // A set of URLs that identify all pending requests
             this._pendingRequests = {};
             this._wrappedInstance = null;
@@ -38,7 +39,7 @@ const connectRequest = (mapPropsToConfigs, options = {}) => WrappedComponent => 
 
         shouldComponentUpdate(nextProps, nextState) {
             if (pure) {
-                return shallowCompare(this, nextProps, nextState);
+                return !shallowEqual(this.props, nextProps) || !shallowEqual(this.state, nextState);
             } else {
                 return true;
             }
@@ -55,7 +56,7 @@ const connectRequest = (mapPropsToConfigs, options = {}) => WrappedComponent => 
 
             const { cancelKeys, requestKeys } = diffConfigs(prevConfigs, configs);
             const requestConfigs = configs.filter(config => {
-                return includes(requestKeys, reconcileQueryKey(config));
+                return includes(requestKeys, getQueryKey(config));
             });
 
             if (cancelKeys.length) {
@@ -76,12 +77,16 @@ const connectRequest = (mapPropsToConfigs, options = {}) => WrappedComponent => 
         }
 
         cancelPendingRequests(cancelKeys) {
-            const { dispatch } = this.context.store;
-            const pendingKeys = Object.keys(this._pendingRequests);
+            const cancelKeysArray = ensureArray(cancelKeys);
 
-            ensureArray(cancelKeys)
-                .filter(key => includes(pendingKeys, key))
-                .forEach(queryKey => dispatch(cancelQuery(queryKey)));
+            if (cancelKeysArray.length > 0) {
+                const { dispatch } = this.context.store;
+                const pendingKeys = Object.keys(this._pendingRequests);
+
+                cancelKeysArray
+                    .filter(key => includes(pendingKeys, key))
+                    .forEach(queryKey => dispatch(cancelQuery(queryKey)));
+            }
         }
 
         requestAsync(configs, force = false, retry = false) {
@@ -95,42 +100,42 @@ const connectRequest = (mapPropsToConfigs, options = {}) => WrappedComponent => 
             const { dispatch } = this.context.store;
 
             if (config.url) {
+                const queryKey = getQueryKey(config);
                 const requestPromise = dispatch(
                     requestAsync({
                         force,
                         retry,
                         ...config,
+                        unstable_preDispatchCallback: () => {
+                            delete this._pendingRequests[queryKey];
+                        },
                     })
                 );
 
                 if (requestPromise) {
                     // Record pending request since a promise was returned
-                    const queryKey = reconcileQueryKey(config);
-                    this._pendingRequests[queryKey] = null;
-
-                    requestPromise.then(() => {
-                        delete this._pendingRequests[queryKey];
-                    });
+                    this._pendingRequests[queryKey] = requestPromise;
                 }
             }
         }
 
-        render() {
-            const configs = mapPropsToConfigs(this.props);
-            const forceRequest = partial(this.requestAsync.bind(this), configs, true, false);
+        forceRequest() {
+            this.requestAsync(mapPropsToConfigs(this.props), true, false);
+        }
 
+        render() {
             if (withRef) {
                 return (
                     <WrappedComponent
                         {...this.props}
-                        forceRequest={forceRequest}
+                        forceRequest={this.forceRequest}
                         ref={ref => {
                             this._wrappedInstance = ref;
                         }}
                     />
                 );
             } else {
-                return <WrappedComponent {...this.props} forceRequest={forceRequest} />;
+                return <WrappedComponent {...this.props} forceRequest={this.forceRequest} />;
             }
         }
     }

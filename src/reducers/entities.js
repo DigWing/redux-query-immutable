@@ -1,7 +1,16 @@
-import * as actionTypes from '../constants/action-types';
-import { fromJS } from 'immutable';
+import { fromJS, Map } from 'immutable';
 
-const initialState = fromJS({});
+import {
+    MUTATE_FAILURE,
+    MUTATE_START,
+    MUTATE_SUCCESS,
+    REQUEST_SUCCESS,
+    RESET,
+    UPDATE_ENTITIES,
+} from '../constants/action-types';
+import { optimisticUpdateEntities } from '../lib/update';
+
+const initialState = new Map();
 
 const withoutPath = (state, path) => {
     const [key, ...restPath] = path;
@@ -15,23 +24,16 @@ const withoutPath = (state, path) => {
 };
 
 const entities = (state = initialState, action) => {
-    if (action.type === actionTypes.RESET) {
+    if (action.type === RESET) {
         return 'entities' in action ? action.entities : initialState;
-    } else if (action.type === actionTypes.MUTATE_START && action.optimisticEntities) {
+    } else if (action.type === MUTATE_START && action.optimisticEntities) {
         return state.merge(action.optimisticEntities);
-    } else if (action.type === actionTypes.MUTATE_FAILURE && action.originalEntities) {
-        return state.merge(action.originalEntities);
-    } else if (action.type === actionTypes.REQUEST_SUCCESS || action.type === actionTypes.MUTATE_SUCCESS) {
+    } else if (action.type === MUTATE_FAILURE && action.rolledBackEntities) {
+        return state.merge(action.rolledBackEntities);
+    } else if (action.type === REQUEST_SUCCESS || action.type === MUTATE_SUCCESS) {
         return state.merge(action.entities);
-    } else if (action.type === actionTypes.REMOVE_ENTITIES) {
-        return action.paths.reduce(
-            (accum, path) => {
-                return withoutPath(accum, path);
-            },
-            state
-        );
-    } else if (action.type === actionTypes.REMOVE_ENTITY) {
-        return withoutPath(state, action.path);
+    } else if (action.type === UPDATE_ENTITIES) {
+        return state.merge(optimisticUpdateEntities(action.update, state));
     } else {
         return state;
     }

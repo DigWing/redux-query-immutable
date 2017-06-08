@@ -1,6 +1,7 @@
 import { assert } from 'chai';
 import superagent from 'superagent';
 import superagentMock from 'superagent-mock';
+import omit from 'lodash.omit';
 
 import * as actionTypes from '../../src/constants/action-types';
 import { getQueryKey } from '../../src/lib/query-key';
@@ -43,7 +44,9 @@ const superagentMockConfig = [
     {
         pattern: '/echo-headers',
         fixtures: (match, params, headers) => {
-            return headers;
+            // Remove the User-Agent header automatically added by superagent
+
+            return omit(headers, 'User-Agent');
         },
         get: mockEndpointForHeaders,
         post: mockEndpointForHeaders,
@@ -66,8 +69,14 @@ const mockDispatchToAssertActions = (actionsToDispatch, done) => {
     return action => {
         // Don't do a deep equal, just check type, url, and status fields
         Object.keys(actionsLeft[0]).forEach(keyToCheck => {
-            if (keyToCheck === 'entities' || keyToCheck === 'optimisticEntities' || keyToCheck === 'originalEntities') {
+            if (
+                keyToCheck === 'entities' ||
+                keyToCheck === 'optimisticEntities' ||
+                keyToCheck === 'rolledBackEntities'
+            ) {
                 action[keyToCheck].get('message') === actionsLeft[0][keyToCheck].get('message');
+                action[keyToCheck].getIn(['messagesById', 'hello']) ===
+                    actionsLeft[0][keyToCheck].getIn(['messagesById', 'hello']);
             } else {
                 assert.equal(action[keyToCheck], actionsLeft[0][keyToCheck]);
             }
@@ -136,10 +145,11 @@ describe('query middleware', () => {
                 },
             ];
             const dispatch = mockDispatchToAssertActions(actionsToDispatch, done);
-            const getState = () => fromJS({
-                entities: {},
-                queries: {},
-            });
+            const getState = () =>
+                fromJS({
+                    entities: {},
+                    queries: {},
+                });
             const nextHandler = queryMiddleware(queriesSelector, entitiesSelector)({
                 dispatch,
                 getState,
@@ -174,10 +184,11 @@ describe('query middleware', () => {
                 },
             ];
             const dispatch = mockDispatchToAssertActions(actionsToDispatch, done);
-            const getState = () => fromJS({
-                entities: {},
-                queries: {},
-            });
+            const getState = () =>
+                fromJS({
+                    entities: {},
+                    queries: {},
+                });
             const nextHandler = queryMiddleware(queriesSelector, entitiesSelector)({
                 dispatch,
                 getState,
@@ -211,10 +222,11 @@ describe('query middleware', () => {
                 },
             ];
             const dispatch = mockDispatchToAssertActions(actionsToDispatch, done);
-            const getState = () => fromJS({
-                entities: {},
-                queries: {},
-            });
+            const getState = () =>
+                fromJS({
+                    entities: {},
+                    queries: {},
+                });
             const nextHandler = queryMiddleware(queriesSelector, entitiesSelector)({
                 dispatch,
                 getState,
@@ -237,15 +249,16 @@ describe('query middleware', () => {
             const dispatch = () => {
                 assert.fail();
             };
-            const queryKey = getQueryKey(url);
-            const getState = () => fromJS({
-                entities: {},
-                queries: {
-                    [queryKey]: {
-                        isPending: false,
+            const queryKey = getQueryKey({ url });
+            const getState = () =>
+                fromJS({
+                    entities: {},
+                    queries: {
+                        [queryKey]: {
+                            isPending: false,
+                        },
                     },
-                },
-            });
+                });
             const nextHandler = queryMiddleware(queriesSelector, entitiesSelector)({ dispatch, getState });
             const actionHandler = nextHandler();
             const requestAction = actionHandler({
@@ -264,16 +277,17 @@ describe('query middleware', () => {
             const dispatch = () => {
                 assert.fail();
             };
-            const queryKey = getQueryKey(url);
-            const getState = () => fromJS({
-                entities: {},
-                queries: {
-                    [queryKey]: {
-                        isPending: true,
-                        status: 500,
+            const queryKey = getQueryKey({ url });
+            const getState = () =>
+                fromJS({
+                    entities: {},
+                    queries: {
+                        [queryKey]: {
+                            isPending: true,
+                            status: 500,
+                        },
                     },
-                },
-            });
+                });
             const nextHandler = queryMiddleware(queriesSelector, entitiesSelector)({ dispatch, getState });
             const actionHandler = nextHandler();
             actionHandler({
@@ -303,16 +317,17 @@ describe('query middleware', () => {
                 },
             ];
             const dispatch = mockDispatchToAssertActions(actionsToDispatch, done);
-            const queryKey = getQueryKey(url);
-            const getState = () => fromJS({
-                entities: {},
-                queries: {
-                    [queryKey]: {
-                        isPending: false,
-                        status: 500,
+            const queryKey = getQueryKey({ url });
+            const getState = () =>
+                fromJS({
+                    entities: {},
+                    queries: {
+                        [queryKey]: {
+                            isPending: false,
+                            status: 500,
+                        },
                     },
-                },
-            });
+                });
             const nextHandler = queryMiddleware(queriesSelector, entitiesSelector)({ dispatch, getState });
             const actionHandler = nextHandler();
             actionHandler({
@@ -342,16 +357,17 @@ describe('query middleware', () => {
                 },
             ];
             const dispatch = mockDispatchToAssertActions(actionsToDispatch, done);
-            const queryKey = getQueryKey(url);
-            const getState = () => fromJS({
-                entities: {},
-                queries: {
-                    [queryKey]: {
-                        isPending: false,
-                        status: 200,
+            const queryKey = getQueryKey({ url });
+            const getState = () =>
+                fromJS({
+                    entities: {},
+                    queries: {
+                        [queryKey]: {
+                            isPending: false,
+                            status: 200,
+                        },
                     },
-                },
-            });
+                });
             const nextHandler = queryMiddleware(queriesSelector, entitiesSelector)({ dispatch, getState });
             const actionHandler = nextHandler();
             actionHandler({
@@ -386,10 +402,11 @@ describe('query middleware', () => {
                 },
             ];
             const dispatch = mockDispatchToAssertActions(actionsToDispatch, done);
-            const getState = () => fromJS({
-                entities: {},
-                queries: {},
-            });
+            const getState = () =>
+                fromJS({
+                    entities: {},
+                    queries: {},
+                });
             const nextHandler = queryMiddleware(queriesSelector, entitiesSelector)({ dispatch, getState });
             const actionHandler = nextHandler();
             actionHandler({
@@ -421,10 +438,11 @@ describe('query middleware', () => {
                 },
             ];
             const dispatch = mockDispatchToAssertActions(actionsToDispatch, done);
-            const getState = () => fromJS({
-                entities: {},
-                queries: {},
-            });
+            const getState = () =>
+                fromJS({
+                    entities: {},
+                    queries: {},
+                });
             const nextHandler = queryMiddleware(queriesSelector, entitiesSelector)({ dispatch, getState });
             const actionHandler = nextHandler();
             actionHandler({
@@ -455,10 +473,11 @@ describe('query middleware', () => {
                 },
             ];
             const dispatch = mockDispatchToAssertActions(actionsToDispatch, done);
-            const getState = () => fromJS({
-                entities: {},
-                queries: {},
-            });
+            const getState = () =>
+                fromJS({
+                    entities: {},
+                    queries: {},
+                });
             const nextHandler = queryMiddleware(queriesSelector, entitiesSelector)({ dispatch, getState });
             const actionHandler = nextHandler();
             actionHandler({
@@ -494,12 +513,13 @@ describe('query middleware', () => {
                 },
             ];
             const dispatch = mockDispatchToAssertActions(actionsToDispatch, done);
-            const getState = () => fromJS({
-                entities: {
-                    message: apiMessage,
-                },
-                queries: {},
-            });
+            const getState = () =>
+                fromJS({
+                    entities: {
+                        message: apiMessage,
+                    },
+                    queries: {},
+                });
             const nextHandler = queryMiddleware(queriesSelector, entitiesSelector)({ dispatch, getState });
             const actionHandler = nextHandler();
             actionHandler({
@@ -529,18 +549,19 @@ describe('query middleware', () => {
                     type: actionTypes.MUTATE_FAILURE,
                     url,
                     status: 404,
-                    originalEntities: fromJS({
+                    rolledBackEntities: fromJS({
                         message: apiMessage,
                     }),
                 },
             ];
             const dispatch = mockDispatchToAssertActions(actionsToDispatch, done);
-            const getState = () => fromJS({
-                entities: {
-                    message: apiMessage,
-                },
-                queries: {},
-            });
+            const getState = () =>
+                fromJS({
+                    entities: {
+                        message: apiMessage,
+                    },
+                    queries: {},
+                });
             const nextHandler = queryMiddleware(queriesSelector, entitiesSelector)({ dispatch, getState });
             const actionHandler = nextHandler();
             actionHandler({
@@ -551,6 +572,65 @@ describe('query middleware', () => {
                 },
                 update: {
                     message: (prevMessage, message) => fromJS(message),
+                },
+            });
+        });
+
+        it('by reverting optimistic updates with rollback in case of failure', done => {
+            const url = '/message/hello/update';
+            const actionsToDispatch = [
+                {
+                    type: actionTypes.MUTATE_START,
+                    url,
+                    optimisticEntities: fromJS({
+                        messagesById: {
+                            hello: 'world',
+                        },
+                    }),
+                },
+                {
+                    type: actionTypes.MUTATE_FAILURE,
+                    url,
+                    status: 404,
+                    rolledBackEntities: fromJS({
+                        messagesById: {
+                            hello: null,
+                        },
+                    }),
+                },
+            ];
+            const dispatch = mockDispatchToAssertActions(actionsToDispatch, done);
+            const getState = () =>
+                fromJS({
+                    entities: {
+                        messagesById: {
+                            hello: null,
+                        },
+                    },
+                    queries: {},
+                });
+            const nextHandler = queryMiddleware(queriesSelector, entitiesSelector)({
+                dispatch,
+                getState,
+            });
+            const actionHandler = nextHandler();
+            actionHandler({
+                type: actionTypes.MUTATE_ASYNC,
+                url,
+                optimisticUpdate: {
+                    messagesById: messagesById =>
+                        messagesById.merge(
+                            fromJS({
+                                hello: 'world',
+                            })
+                        ),
+                },
+                update: {
+                    messagesById: (prevMessagesById, messagesById) => prevMessagesById.merge(messagesById),
+                },
+                rollback: {
+                    messagesById: (originalMessagesById, currentMessagesById) =>
+                        currentMessagesById.merge(originalMessagesById),
                 },
             });
         });
@@ -570,16 +650,17 @@ describe('query middleware', () => {
                     done();
                 },
             };
-            const queryKey = getQueryKey(url);
-            const getState = () => fromJS({
-                entities: {},
-                queries: {
-                    [queryKey]: {
-                        isPending: true,
-                        request: mockRequestObject,
+            const queryKey = getQueryKey({ url });
+            const getState = () =>
+                fromJS({
+                    entities: {},
+                    queries: {
+                        [queryKey]: {
+                            isPending: true,
+                            networkHandler: mockRequestObject,
+                        },
                     },
-                },
-            });
+                });
             const next = () => {};
             const nextHandler = queryMiddleware(queriesSelector, entitiesSelector)({ dispatch, getState });
             const actionHandler = nextHandler(next);
@@ -599,17 +680,18 @@ describe('query middleware', () => {
                     done();
                 },
             };
-            const queryKey = getQueryKey(url);
-            const getState = () => fromJS({
-                entities: {},
-                queries: {
-                    [queryKey]: {
-                        isPending: true,
-                        isMutation: true,
-                        request: mockRequestObject,
+            const queryKey = getQueryKey({ url });
+            const getState = () =>
+                fromJS({
+                    entities: {},
+                    queries: {
+                        [queryKey]: {
+                            isPending: true,
+                            isMutation: true,
+                            networkHandler: mockRequestObject,
+                        },
                     },
-                },
-            });
+                });
             const next = () => {};
             const nextHandler = queryMiddleware(queriesSelector, entitiesSelector)({ dispatch, getState });
             const actionHandler = nextHandler(next);
@@ -637,19 +719,20 @@ describe('query middleware', () => {
                     }
                 },
             };
-            const getState = () => fromJS({
-                entities: {},
-                queries: {
-                    '/api1': {
-                        isPending: true,
-                        request: mockRequestObject,
+            const getState = () =>
+                fromJS({
+                    entities: {},
+                    queries: {
+                        '/api1': {
+                            isPending: true,
+                            networkHandler: mockRequestObject,
+                        },
+                        '/api2': {
+                            isPending: true,
+                            networkHandler: mockRequestObject,
+                        },
                     },
-                    '/api2': {
-                        isPending: true,
-                        request: mockRequestObject,
-                    },
-                },
-            });
+                });
             const nextHandler = queryMiddleware(queriesSelector, entitiesSelector)({ dispatch, getState });
             const actionHandler = nextHandler(next);
             actionHandler({

@@ -70,7 +70,7 @@ describe('entities reducer', () => {
     it('should handle MUTATE_FAILURE and original entities', () => {
         const action = {
             type: actionTypes.MUTATE_FAILURE,
-            originalEntities: fromJS({
+            rolledBackEntities: fromJS({
                 message: 'hello, world!',
             }),
         };
@@ -98,10 +98,12 @@ describe('entities reducer', () => {
         assert.isTrue(newEntities.isEmpty());
     });
 
-    it('should handle REMOVE_ENTITY', () => {
+    it('should handle UPDATE_ENTITIES', () => {
         const action = {
-            type: actionTypes.REMOVE_ENTITY,
-            path: ['some', 'thing', 'gone'],
+            type: actionTypes.UPDATE_ENTITIES,
+            update: {
+                some: value => value.merge(fromJS({ thing: {} })),
+            },
         };
         const prevState = fromJS({
             some: {
@@ -114,10 +116,13 @@ describe('entities reducer', () => {
         assert.isTrue(newEntities.getIn(['some', 'thing']).isEmpty());
     });
 
-    it('should handle REMOVE_ENTITIES', () => {
+    it('should handle UPDATE_ENTITIES with multiple entities', () => {
         const action = {
-            type: actionTypes.REMOVE_ENTITIES,
-            paths: [['some', 'thing', 'gone'], ['something', 'else', 'gone']],
+            type: actionTypes.UPDATE_ENTITIES,
+            update: {
+                some: value => value.merge(fromJS({ thing: {} })),
+                something: value => value.merge(fromJS({ else: {} })),
+            },
         };
         const prevState = fromJS({
             some: {
@@ -128,6 +133,11 @@ describe('entities reducer', () => {
             something: {
                 else: {
                     gone: {},
+                },
+            },
+            dont: {
+                touch: {
+                    this: {},
                 },
             },
         });
