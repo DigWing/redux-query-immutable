@@ -1,6 +1,6 @@
 {
   "name": "redux-query-immutable",
-  "version": "3.0.0",
+  "version": "1.5.1",
   "description": "A fork of redux-query with support for ImmutableJS",
   "main": "dist/commonjs/index.js",
   "module": "dist/es/index.js",
