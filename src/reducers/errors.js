@@ -1,5 +1,4 @@
 import { Map, fromJS } from 'immutable';
-import omit from 'lodash.omit';
 
 import * as actionTypes from '../constants/action-types';
 

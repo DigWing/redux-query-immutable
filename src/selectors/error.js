@@ -1,5 +1,3 @@
-import get from 'lodash.get';
-
 import { getQueryKey } from '../lib/query-key';
 
 const getQueryState = (errorsState, queryConfig, queryStateKey) => {
