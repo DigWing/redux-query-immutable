@@ -32,6 +32,7 @@ const queries = (state = initialState, action) => {
             return state;
         }
     }
+  }
 };
 
 export default queries;

@@ -205,4 +205,4 @@ describe('query selectors', () => {
             assert.equal(queryCount, 2);
         });
     });
-});
+  });

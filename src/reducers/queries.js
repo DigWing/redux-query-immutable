@@ -49,12 +49,12 @@ const queries = (state = initialState, action) => {
                 return state.mergeIn([action.queryKey], fromJS(newQueryKeyState));
             }
 
-            return state;
-        }
-        default: {
-            return state;
-        }
+      return state;
     }
+    default: {
+      return state;
+    }
+  }
 };
 
 export default queries;

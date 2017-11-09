@@ -1,19 +1,19 @@
 import { fromJS, Map } from 'immutable';
 
 import {
-    MUTATE_FAILURE,
-    MUTATE_START,
-    MUTATE_SUCCESS,
-    REQUEST_SUCCESS,
-    RESET,
-    UPDATE_ENTITIES,
+  MUTATE_FAILURE,
+  MUTATE_START,
+  MUTATE_SUCCESS,
+  REQUEST_SUCCESS,
+  RESET,
+  UPDATE_ENTITIES,
 } from '../constants/action-types';
 import { optimisticUpdateEntities } from '../lib/update';
 
 const initialState = new Map();
 
 const withoutPath = (state, path) => {
-    const [key, ...restPath] = path;
+  const [key, ...restPath] = path;
 
     if (restPath.length) {
         const newMap = fromJS({ [key]: withoutPath(state.get(key), restPath) });
