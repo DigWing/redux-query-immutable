@@ -6,12 +6,9 @@
   "module": "dist/es/index.js",
   "jsnext:main": "dist/es/index.js",
   "scripts": {
-    "build:commonjs":
-      "npm run clean:commonjs && cross-env NODE_ENV=production cross-env BABEL_ENV=commonjs babel src --out-dir dist/commonjs --ignore examples/,test/",
-    "build:es":
-      "npm run clean:es && cross-env NODE_ENV=production cross-env BABEL_ENV=es babel src --out-dir dist/es --ignore examples/,test/",
-    "build:umd":
-      "npm run clean:umd && cross-env NODE_ENV=production webpack --config webpack.config.js --bail",
+    "build:commonjs": "npm run clean:commonjs && cross-env NODE_ENV=production cross-env BABEL_ENV=commonjs babel src --out-dir dist/commonjs --ignore examples/,test/",
+    "build:es": "npm run clean:es && cross-env NODE_ENV=production cross-env BABEL_ENV=es babel src --out-dir dist/es --ignore examples/,test/",
+    "build:umd": "npm run clean:umd && cross-env NODE_ENV=production webpack --config webpack.config.js --bail",
     "build": "npm run build:commonjs && npm run build:es && npm run build:umd",
     "clean:commonjs": "rimraf dist/commonjs",
     "clean:coverage": "rimraf coverage",
@@ -24,14 +21,20 @@
     "predeploy": "npm run build:site",
     "lint": "eslint src test --fix",
     "test:cov": "cross-env NODE_ENV=test nyc npm test",
-    "test":
-      "mocha --compilers js:babel-core/register --reporter spec test/**/*.test.js"
+    "test": "mocha --compilers js:babel-core/register --reporter spec test/**/*.test.js"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/holidu/redux-query-immutable.git"
   },
-  "keywords": ["redux", "react", "query", "fetch", "REST", "ImmutableJS"],
+  "keywords": [
+    "redux",
+    "react",
+    "query",
+    "fetch",
+    "REST",
+    "ImmutableJS"
+  ],
   "author": "Michael Siebers <michael.siebers@holidu.com>",
   "license": "MIT",
   "dependencies": {

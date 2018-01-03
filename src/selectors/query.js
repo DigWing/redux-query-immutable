@@ -1,29 +1,29 @@
 import { getQueryKey } from '../lib/query-key';
 
 const getQueryState = (queriesState, queryConfig, queryStateKey) => {
-    if (queryConfig) {
-        const queryKey = getQueryKey(queryConfig);
+  if (queryConfig) {
+    const queryKey = getQueryKey(queryConfig);
 
-        return queriesState.getIn([queryKey, queryStateKey]);
-    }
+    return queriesState.getIn([queryKey, queryStateKey]);
+  }
 };
 
 export const isFinished = (queriesState, queryConfig) => {
-    return getQueryState(queriesState, queryConfig, 'isFinished');
+  return getQueryState(queriesState, queryConfig, 'isFinished');
 };
 
 export const isPending = (queriesState, queryConfig) => {
-    return getQueryState(queriesState, queryConfig, 'isPending');
+  return getQueryState(queriesState, queryConfig, 'isPending');
 };
 
 export const status = (queriesState, queryConfig) => {
-    return getQueryState(queriesState, queryConfig, 'status');
+  return getQueryState(queriesState, queryConfig, 'status');
 };
 
 export const lastUpdated = (queriesState, queryConfig) => {
-    return getQueryState(queriesState, queryConfig, 'lastUpdated');
+  return getQueryState(queriesState, queryConfig, 'lastUpdated');
 };
 
 export const queryCount = (queriesState, queryConfig) => {
-    return getQueryState(queriesState, queryConfig, 'queryCount');
+  return getQueryState(queriesState, queryConfig, 'queryCount');
 };
