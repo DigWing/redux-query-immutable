@@ -20,6 +20,10 @@ export const status = (queriesState, queryConfig) => {
   return getQueryState(queriesState, queryConfig, 'status');
 };
 
+export const headers = (queriesState, queryConfig) => {
+  return getQueryState(queriesState, queryConfig, 'headers');
+};
+
 export const lastUpdated = (queriesState, queryConfig) => {
   return getQueryState(queriesState, queryConfig, 'lastUpdated');
 };

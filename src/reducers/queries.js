@@ -34,6 +34,7 @@ const queries = (state = initialState, action) => {
         isPending: false,
         lastUpdated: action.time,
         status: action.status,
+        headers: action.responseHeaders,
       };
 
       return state.mergeIn([action.queryKey], fromJS(newQueryKeyState));

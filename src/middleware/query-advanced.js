@@ -132,6 +132,7 @@ const queryMiddlewareAdvanced = networkInterface => (
                   dispatch(
                     requestFailure({
                       body,
+                      duration,
                       meta,
                       queryKey,
                       responseBody,
@@ -158,6 +159,7 @@ const queryMiddlewareAdvanced = networkInterface => (
                   dispatch(
                     requestSuccess({
                       body,
+                      duration,
                       meta,
                       entities: newEntities,
                       queryKey,
@@ -258,6 +260,7 @@ const queryMiddlewareAdvanced = networkInterface => (
               dispatch(
                 mutateFailure({
                   body,
+                  duration,
                   meta,
                   queryKey,
                   responseBody,
@@ -284,6 +287,7 @@ const queryMiddlewareAdvanced = networkInterface => (
                 mutateSuccess({
                   url,
                   body,
+                  duration,
                   status,
                   entities: newEntities,
                   queryKey,

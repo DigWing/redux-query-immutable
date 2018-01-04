@@ -30,14 +30,14 @@ export const getQueries = (state) => state.get('queries');
 export const getEntities = (state) => state.get('entities');
 
 const reducer = combineReducers({
-    entities: entitiesReducer,
-    queries: queriesReducer,
+  entities: entitiesReducer,
+  queries: queriesReducer,
 });
 
 const logger = createLogger();
 const store = createStore(
-    reducer,
-    applyMiddleware(queryMiddleware(getQueries, getEntities), logger)
+  reducer,
+  applyMiddleware(queryMiddleware(getQueries, getEntities), logger)
 );
 ```
 
@@ -51,10 +51,15 @@ import { connectRequest } from 'redux-query-immutable';
 import { connect } from 'react-redux-immutable';
 
 class Dashboard extends Component {
-    ...
+  ...
 }
 
-const DashboardContainer = connectRequest((props) => ({
+const mapStateToProps = (state, props) => ({
+  dashboard: getDashboard(state, props),
+});
+
+const mapPropsToConfigs = props => [
+  {
     url: `/api/dashboard/${props.dashboardId}`,
     update: {
         chartsById: (prevCharts, dashboardCharts) => (
@@ -64,13 +69,11 @@ const DashboardContainer = connectRequest((props) => ({
             prevDashboards.mergeDeep(dashboards)
         ),
     },
-}))(Dashboard);
+  }
+];
 
-const mapStateToProps = (state, props) => {
-    return {
-        dashboard: getDashboard(state, props),
-    };
-};
-
-export default connect(mapStateToProps)(DashboardContainer);
+export default compose(
+  connect(mapStateToProps),
+  connectRequest(mapPropsToConfigs)
+)(Dashboard);
 ```

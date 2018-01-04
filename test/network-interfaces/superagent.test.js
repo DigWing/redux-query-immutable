@@ -44,4 +44,22 @@ describe('superagent interface', () => {
     const invalid = () => superagentInterface('http://localhost', 'abc');
     assert.throws(invalid, /Unsupported HTTP method/);
   });
+
+  it('must return a POST request with form data if multipart true', () => {
+    const { instance } = superagentInterface('http://localhost', HTTPMethods.POST, {
+      body: { files: [{ key: 'file1', value: 'x.jpg' }] },
+      multipart: true,
+    });
+    assert.isTrue(instance._formData !== null);
+    assert.equal(instance.method, HTTPMethods.POST);
+  });
+
+  it('must throw an error when multipart true and not POST method', () => {
+    const invalid = () =>
+      superagentInterface('http://localhost', HTTPMethods.GET, {
+        body: { test: 'x' },
+        multipart: true,
+      });
+    assert.throws(invalid, /Files can only be uploaded with POST requests./);
+  });
 });
