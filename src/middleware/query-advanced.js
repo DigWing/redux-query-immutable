@@ -16,7 +16,12 @@ import * as actionTypes from '../constants/action-types';
 import * as httpMethods from '../constants/http-methods';
 import * as statusCodes from '../constants/status-codes';
 import { getQueryKey } from '../lib/query-key';
-import { updateEntities, optimisticUpdateEntities, rollbackEntities } from '../lib/update';
+import {
+  updateEntities,
+  optimisticUpdateEntities,
+  rollbackEntities,
+  updateResults,
+} from '../lib/update';
 
 const defaultConfig = {
   backoff: {
@@ -49,6 +54,7 @@ const resOk = status => Math.floor(status / 100) === 2;
 const queryMiddlewareAdvanced = networkInterface => (
   queriesSelector,
   entitiesSelector,
+  resultsSelector,
   config = defaultConfig,
 ) => {
   return ({ dispatch, getState }) => next => action => {
@@ -62,7 +68,9 @@ const queryMiddlewareAdvanced = networkInterface => (
           force,
           retry,
           transform = identity,
+          transformResult = identity,
           update,
+          updateResult,
           options = {},
           meta,
         } = action;
@@ -123,6 +131,8 @@ const queryMiddlewareAdvanced = networkInterface => (
                 const duration = end - start;
                 let transformed;
                 let newEntities;
+                let transformedResult;
+                let newResults;
 
                 if (action.unstable_preDispatchCallback) {
                   action.unstable_preDispatchCallback();
@@ -153,8 +163,11 @@ const queryMiddlewareAdvanced = networkInterface => (
                 } else {
                   const callbackState = getState();
                   const entities = entitiesSelector(callbackState);
+                  const results = resultsSelector(callbackState);
                   transformed = fromJS(transform(responseBody, responseText));
                   newEntities = updateEntities(update, entities, transformed);
+                  transformedResult = fromJS(transformResult(responseBody, responseText));
+                  newResults = updateResults(updateResult, results, transformedResult);
 
                   dispatch(
                     requestSuccess({
@@ -162,6 +175,7 @@ const queryMiddlewareAdvanced = networkInterface => (
                       duration,
                       meta,
                       entities: newEntities,
+                      results: newResults,
                       queryKey,
                       responseBody,
                       responseHeaders,
@@ -178,6 +192,8 @@ const queryMiddlewareAdvanced = networkInterface => (
                     text: responseText,
                     transformed,
                     entities: newEntities,
+                    transformedResult,
+                    results: newResults,
                     headers: responseHeaders,
                   });
                 }
@@ -194,7 +210,9 @@ const queryMiddlewareAdvanced = networkInterface => (
         const {
           url,
           transform = identity,
+          transformResult = identity,
           update,
+          updateResult,
           rollback,
           body,
           optimisticUpdate,
@@ -243,8 +261,12 @@ const queryMiddlewareAdvanced = networkInterface => (
             const duration = end - start;
             const state = getState();
             const entities = entitiesSelector(state);
+            const results = resultsSelector(state);
+
             let transformed;
             let newEntities;
+            let transformedResult;
+            let newResults;
 
             if (err || !resOk(status)) {
               let rolledBackEntities;
@@ -282,6 +304,8 @@ const queryMiddlewareAdvanced = networkInterface => (
             } else {
               transformed = fromJS(transform(responseBody, responseText));
               newEntities = updateEntities(update, entities, transformed);
+              transformedResult = fromJS(transformResult(responseBody, responseText));
+              newResults = updateResults(updateResult, results, transformedResult);
 
               dispatch(
                 mutateSuccess({
@@ -290,6 +314,7 @@ const queryMiddlewareAdvanced = networkInterface => (
                   duration,
                   status,
                   entities: newEntities,
+                  results: newResults,
                   queryKey,
                   responseBody,
                   responseText,
@@ -305,6 +330,8 @@ const queryMiddlewareAdvanced = networkInterface => (
                 text: responseText,
                 transformed,
                 entities: newEntities,
+                transformedResult,
+                results: newResults,
                 headers: responseHeaders,
               });
             }

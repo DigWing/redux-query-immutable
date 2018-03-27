@@ -91,9 +91,11 @@ const connectRequest = (mapPropsToConfigs, options = {}) => WrappedComponent => 
 
     requestAsync(configs, force = false, retry = false) {
       // propsToConfig mapping has happened already
-      ensureArray(configs).filter(Boolean).forEach(c => {
-        this.makeRequest(c, force, retry);
-      });
+      ensureArray(configs)
+        .filter(Boolean)
+        .forEach(c => {
+          this.makeRequest(c, force, retry);
+        });
     }
 
     makeRequest(config, force, retry) {
