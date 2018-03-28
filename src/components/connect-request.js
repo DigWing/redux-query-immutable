@@ -112,7 +112,7 @@ const connectRequest = (mapPropsToConfigs, options = {}) => WrappedComponent => 
               delete this._pendingRequests[queryKey];
             },
           }),
-        );
+        ).then(config.requestCallback ? resp => config.requestCallback(resp) : () => {});
 
         if (requestPromise) {
           // Record pending request since a promise was returned

@@ -1,6 +1,6 @@
 {
   "name": "@digitalwing.co/redux-query-immutable",
-  "version": "2.3.2",
+  "version": "2.3.3",
   "description": "A fork of redux-query with support for ImmutableJS",
   "main": "dist/commonjs/index.js",
   "module": "dist/es/index.js",
