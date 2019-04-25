@@ -1,6 +1,6 @@
 {
   "name": "@digitalwing.co/redux-query-immutable",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "description": "A fork of redux-query with support for ImmutableJS",
   "main": "dist/commonjs/index.js",
   "module": "dist/es/index.js",
@@ -25,7 +25,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/holidu/redux-query-immutable.git"
+    "url": "https://github.com/DigWing/redux-query-immutable.git"
   },
   "keywords": [
     "redux",
