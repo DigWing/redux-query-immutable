@@ -1,6 +1,6 @@
 {
   "name": "@digitalwing.co/redux-query-immutable",
-  "version": "2.3.4",
+  "version": "2.3.5",
   "description": "A fork of redux-query with support for ImmutableJS",
   "main": "dist/commonjs/index.js",
   "module": "dist/es/index.js",
@@ -46,13 +46,14 @@
     "lodash.identity": "^3.0.0",
     "lodash.includes": "^4.3.0",
     "lodash.intersection": "^4.4.0",
+    "lodash.isfunction": "^3.0.9",
     "lodash.values": "^4.3.0",
     "prop-types": "^15.5.6",
     "superagent": "^3.5.1"
   },
   "peerDependencies": {
-    "react": "^0.14.0 || ^15.0.0-0 || ^16.0.0-rc",
-    "redux": "^2.0.0 || ^3.0.0",
+    "react": "^0.14.0 || ^15.0.0-0 || ^16.0.0-rc || ^16.8.4",
+    "redux": "^2.0.0 || ^3.0.0 || ^4.0.1",
     "redux-immutable": "^3.1.0 || ^4.0.0"
   },
   "devDependencies": {

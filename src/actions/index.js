@@ -139,11 +139,13 @@ export const mutateFailure = ({
 
 export const requestAsync = ({
   body,
+  errorCallback,
   force,
   meta,
   options,
   queryKey,
   retry,
+  successCallback,
   transform,
   transformResult,
   update,
@@ -154,11 +156,13 @@ export const requestAsync = ({
   return {
     type: actionTypes.REQUEST_ASYNC,
     body,
+    errorCallback,
     force,
     queryKey,
     meta,
     options,
     retry,
+    successCallback,
     transform,
     transformResult,
     update,

@@ -3,6 +3,7 @@ import invariant from 'invariant';
 import { fromJS, Map, Set } from 'immutable';
 import identity from 'lodash.identity';
 import includes from 'lodash.includes';
+import isfunction from 'lodash.isfunction';
 
 import {
   requestStart,
@@ -65,14 +66,14 @@ const queryMiddlewareAdvanced = networkInterface => (
         const {
           url,
           body,
-          force,
+          force = true,
           retry,
           transform = identity,
           transformResult = identity,
-          update,
+          update = {},
           updateResult,
           options = {},
-          meta,
+          meta = {},
         } = action;
 
         invariant(!!url, 'Missing required `url` field in action handler');
@@ -364,6 +365,28 @@ const queryMiddlewareAdvanced = networkInterface => (
         const pendingQueries = getPendingQueries(queries);
 
         pendingQueries.forEach(query => query.getIn(['networkHandler', 'abort'])());
+        returnValue = next(action);
+
+        break;
+      }
+      case actionTypes.REQUEST_SUCCESS: {
+        const { successCallback } = action;
+
+        if (successCallback && isfunction(successCallback)) {
+          successCallback(action);
+        }
+
+        returnValue = next(action);
+
+        break;
+      }
+      case actionTypes.REQUEST_FAILURE: {
+        const { errorCallback } = action;
+
+        if (errorCallback && isfunction(errorCallback)) {
+          errorCallback(action);
+        }
+
         returnValue = next(action);
 
         break;
