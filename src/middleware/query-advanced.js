@@ -66,14 +66,14 @@ const queryMiddlewareAdvanced = networkInterface => (
         const {
           url,
           body,
-          force = true,
+          force,
           retry,
           transform = identity,
           transformResult = identity,
-          update = {},
+          update,
           updateResult,
           options = {},
-          meta = {},
+          meta,
         } = action;
 
         invariant(!!url, 'Missing required `url` field in action handler');
