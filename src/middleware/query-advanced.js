@@ -373,7 +373,7 @@ const queryMiddlewareAdvanced = networkInterface => (
         const { successCallback } = action;
 
         if (successCallback && isfunction(successCallback)) {
-          successCallback(action);
+          successCallback(action.responseBody);
         }
 
         returnValue = next(action);
@@ -387,7 +387,7 @@ const queryMiddlewareAdvanced = networkInterface => (
           errorCallback(action);
         }
 
-        returnValue = next(action);
+        returnValue = next(action.responseBody);
 
         break;
       }
