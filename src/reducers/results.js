@@ -8,7 +8,6 @@ import {
   RESET,
   UPDATE_RESULTS,
 } from '../constants/action-types';
-import { optimisticUpdateResults } from '../lib/update';
 
 const initialState = new Map();
 
@@ -33,7 +32,7 @@ const results = (state = initialState, action) => {
   } else if (action.type === REQUEST_SUCCESS || action.type === MUTATE_SUCCESS) {
     return state.merge(action.results);
   } else if (action.type === UPDATE_RESULTS) {
-    return state.merge(optimisticUpdateResults(action.updateResults, state));
+    return state.merge(action.update);
   } else {
     return state;
   }

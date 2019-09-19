@@ -8,7 +8,6 @@ import {
   RESET,
   UPDATE_ENTITIES,
 } from '../constants/action-types';
-import { optimisticUpdateEntities } from '../lib/update';
 
 const initialState = new Map();
 
@@ -33,7 +32,7 @@ const entities = (state = initialState, action) => {
   } else if (action.type === REQUEST_SUCCESS || action.type === MUTATE_SUCCESS) {
     return state.merge(action.entities);
   } else if (action.type === UPDATE_ENTITIES) {
-    return state.merge(optimisticUpdateEntities(action.update, state));
+    return state.merge(action.update);
   } else {
     return state;
   }
