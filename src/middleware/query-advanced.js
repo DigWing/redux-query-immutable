@@ -384,10 +384,10 @@ const queryMiddlewareAdvanced = networkInterface => (
         const { errorCallback } = action;
 
         if (errorCallback && isfunction(errorCallback)) {
-          errorCallback(action);
+          errorCallback(action.responseBody);
         }
 
-        returnValue = next(action.responseBody);
+        returnValue = next(action);
 
         break;
       }
